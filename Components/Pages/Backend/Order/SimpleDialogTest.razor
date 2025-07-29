@@ -1,0 +1,39 @@
+@* @rendermode InteractiveServer *@
+@using MudBlazor
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            Test Dialog
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText>This is a simple test dialog.</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseDialog">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine($"SimpleTestDialog: OnInitializedAsync - MudDialog is {(MudDialog == null ? "NULL" : "NOT NULL")}");
+        await base.OnInitializedAsync();
+    }
+
+    private void CloseDialog()
+    {
+        if (MudDialog != null)
+        {
+            Console.WriteLine("SimpleTestDialog: Closing dialog via MudDialog.Close()");
+            MudDialog.Close(DialogResult.Cancel());
+        }
+        else
+        {
+            Console.WriteLine("SimpleTestDialog: MudDialog is NULL during CloseDialog()");
+        }
+    }
+}

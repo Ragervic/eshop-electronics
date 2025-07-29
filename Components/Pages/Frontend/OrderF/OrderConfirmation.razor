@@ -1,0 +1,106 @@
+@page "/orderconfirmation/{Id:guid}"
+
+@using MudBlazor
+@using TestP.Models
+@using TestP.Data
+@using TestP.Services
+@using Microsoft.EntityFrameworkCore
+
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject BreadCrumbService breadCrumbService
+
+<PageTitle>Order Confirmed!</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-8">
+    <MudGrid Justify="Justify.Center">
+        <MudItem xs="12">
+            <MudCard Outlined="true" Class="mud-elevation-2 mb-6">
+                <MudCardContent Class="d-flex align-center">
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" Class="mr-4" Style="font-size: 70px;" />
+                    <div>
+                        <MudText Typo="Typo.h5" GutterBottom="true">Thank you for placing an order!</MudText>
+                        <MudText Typo="Typo.h6">Order N° @Order?.Id.ToString().Substring(0, 8).ToUpper()</MudText> @* Display first 8 chars of GUID as Order No *@
+                    </div>
+                    <MudButton OnClick="SeeOrderDetails" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">SEE ORDER DETAILS</MudButton>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudCard Outlined="true" Class="mud-elevation-2 mb-6">
+                <MudCardHeader>
+                    <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Color="Color.Primary" Class="mr-2" />
+                    <MudText Typo="Typo.h6">Pick-up Station</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    @if (Order?.DeliveryDetails != null)
+                    {
+                        <MudText Typo="Typo.body2">You will be notified through SMS, email, app inbox, and push notifications when your package is ready for pickup.</MudText>
+                        <MudText Typo="Typo.body2" Class="mt-2"><b>Pickup Station:</b> @Order.DeliveryDetails.PickupStationName</MudText>
+                        <MudText Typo="Typo.body2">Delivery between @Order.DeliveryDetails.DeliveryDateStart?.ToString("dd MMMM") and @Order.DeliveryDetails.DeliveryDateEnd?.ToString("dd MMMM")</MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2">Delivery details not available.</MudText>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudCard Outlined="true" Class="mud-elevation-2 mb-6">
+                <MudCardHeader>
+                    <MudIcon Icon="@Icons.Material.Filled.Payments" Color="Color.Primary" Class="mr-2" />
+                    <MudText Typo="Typo.h6">PAY ON DELIVERY with Mobile Money and Bank Cards</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    @if (Order?.PaymentDetails != null)
+                    {
+                        <MudText Typo="Typo.body2">Experience our safe and fast payment option with JumiaPay on Delivery with M-Pesa, Airtel, or Bank Cards.</MudText>
+                        <MudText Typo="Typo.body2" Class="mt-2">Payment Method: @Order.PaymentDetails.PaymentMethodType</MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2">Payment details not available.</MudText>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; } 
+
+    private Order? Order { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        breadCrumbService.Clear();
+        breadCrumbService.AddItem("Home", "/");
+        breadCrumbService.AddItem("Cart", "/cart");
+        breadCrumbService.AddItem("Checkout", "/checkout");
+        breadCrumbService.AddItem($"Order Confirmation{Id}", $"/orderconfirmation/{Id}");
+        
+        using (var context = DbFactory.CreateDbContext())
+        {
+            Order = await context.Orders
+                .Include(o => o.OrderItems) 
+                .FirstOrDefaultAsync(o => o.Id == Id);
+
+            if (Order == null)
+            {
+                Snackbar.Add($"Order with ID '{Id}' not found.", Severity.Error);
+                NavigationManager.NavigateTo("/");
+            }
+        }
+    }
+
+    private void SeeOrderDetails()
+    {
+        NavigationManager.NavigateTo($"/orderdetails/{Id}");
+    }
+}

@@ -1,0 +1,344 @@
+﻿@page "/admin-dashboard"
+@using TestP.Components.Layout
+@layout AdminLayout
+@rendermode InteractiveServer
+
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+@using MudBlazor.Charts
+@using System.Security.Claims
+@using TestP.Data
+@using TestP.Models
+@using TestP.Services.Analytics
+
+@inject ISalesAnalyticsService SalesAnalyticsService
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ISnackbar Snackbar
+
+<PageTitle>Admin Dashboard</PageTitle>
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <MudPaper Elevation="2" Style="background-color:	#c9dcff; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  top: 0;z-index: 1000;">
+            <MudText Typo="Typo.h4" Class="mb-8 mt-4 text-bold" GutterBottom="true" Color="Color.Primary">Dashboard
+            </MudText>
+        </MudPaper>
+
+        @if (_isLoading)
+        {
+            <MudProgressLinear Indeterminate="true" Class="my-4" />
+            <MudText Typo="Typo.body1">Loading dashboard data...</MudText>
+        }
+        else
+        {
+            <MudGrid Spacing="4" Class="mb-6">
+                <MudItem xs="12" sm="6" md="4">
+                    <a href="/sales">
+                        <MudPaper Elevation="1" Class="pa-4 d-flex align-center flex-grow-1" Style="height:120px;">
+                            <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Color="Color.Success" Size="Size.Large"
+                                Class="mr-4" />
+                            <div>
+                                <MudText Typo="Typo.h6" Class="mud-text-secondary">Total Sales</MudText>
+                                <MudText Typo="Typo.h4" Color="Color.Primary">@_totalSales.ToString("C2", _kes)</MudText>
+                                <MudText Typo="Typo.caption" Class="mud-text-success">Total revenue from all orders
+                                </MudText>
+                            </div>
+                        </MudPaper>
+                    </a>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="4">
+                    <a href="/admin-orders">
+                        <MudPaper Elevation="1" Class="pa-4 d-flex align-center flex-grow-1" Style="height: 120px;">
+                            <MudIcon Icon="@Icons.Material.Filled.ShoppingBag" Color="Color.Warning" Size="Size.Large"
+                                Class="mr-4" />
+                            <div>
+                                <MudText Typo="Typo.h6" Class="mud-text-secondary">Orders Today</MudText>
+                                <MudText Typo="Typo.h4" Color="Color.Primary">@_ordersTodayCount</MudText>
+                                <MudText Typo="Typo.caption" Class="mud-text-info">Orders placed within the last 24 hours
+                                </MudText>
+                            </div>
+                        </MudPaper>
+                    </a>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="4">
+                    <a href="/products">
+                        <MudPaper Elevation="1" Class="pa-4 d-flex align-center flex-grow-1" Style="height: 120px;">
+                            <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Large"
+                                Class="mr-4" />
+                            <div>
+                                <MudText Typo="Typo.h6" Class="mud-text-secondary">Low Stock Items</MudText>
+                                <MudText Typo="Typo.h4" Color="Color.Primary">@_lowStockItemCount</MudText>
+                                <MudText Typo="Typo.caption" Class="mud-text-error">Action Required</MudText>
+                            </div>
+                        </MudPaper>
+                    </a>
+                </MudItem>
+            </MudGrid>
+
+
+            <MudGrid Spacing="4" Class="mb-6">
+                <MudItem xs="12" md="6">
+                    <MudPaper Elevation="1" Class="pa-4 mb-6">
+                        <MudText Typo="Typo.h6" Class="mb-4">Revenue Trends</MudText>
+                        @* MudChart for Revenue Trends *@
+                        @if (_isLoadingCharts)
+                        {
+                            <MudProgressCircular Indeterminate="true" Class="d-flex justify-center my-8" />
+                        }
+                        else if (_revenueData == null || !_revenueData.Any())
+                        {
+                            <MudAlert Severity="Severity.Info" Class="my-4">No revenue data available for this period.
+                            </MudAlert>
+                        }
+                        else
+                        {
+                            @if (RevenueChartSeries.FirstOrDefault()?.Data?.Length >= 2)
+                            {
+                                var interpolation = RevenueChartSeries.FirstOrDefault()?.Data?.Length >= 4 ?
+                                InterpolationOption.NaturalSpline : InterpolationOption.Straight;
+                                _revenueChartOptions.InterpolationOption = interpolation;
+                                <MudChart ChartType="ChartType.Line" ChartOptions="_revenueChartOptions"
+                                    ChartSeries="RevenueChartSeries" XAxisLabels="RevenueChartLabels" Height="250px" Width="100%" />
+                            }
+                            else
+                            {
+                                <MudAlert Severity="Severity.Info" Class="my-4">Not enough data to display chart (minimum 2 points
+                                    required).</MudAlert>
+                            }
+                        }
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudPaper Elevation="1" Class="pa-4 mb-6">
+                        <MudText Typo="Typo.h6" Class="mb-4">Orders by Category</MudText>
+                        @if (_isLoadingCharts)
+                        {
+                            <MudProgressCircular Indeterminate="true" Class="d-flex justify-center my-8" />
+                        }
+                        else if (_ordersByCategoryData == null || !_ordersByCategoryData.Any())
+                        {
+                            <MudAlert Severity="Severity.Info" Class="my-4">No orders by category data available.
+                            </MudAlert>
+                        }
+                        else
+                        {
+                            <MudChart ChartType="ChartType.Donut" LegendPosition="Position.End"
+                                ChartOptions="_ordersByCategoryChartOptions" InputData="OrdersByCategoryChartData"
+                                InputLabels="OrdersByCategoryChartLabels" Height="300px" Width="100%" />
+                        }
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+
+            <MudPaper Elevation="1" Class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-4">Recent Orders</MudText>
+                @if (!_recentOrders.Any())
+                {
+                    <MudAlert Severity="Severity.Info">No recent orders to display.</MudAlert>
+                }
+                else
+                {
+                    <MudTable Items="@_recentOrders" Hover="true" Breakpoint="Breakpoint.Sm" Class="mb-4">
+                        <HeaderContent>
+                            <MudTh>ORDER ID</MudTh>
+                            <MudTh>CUSTOMER</MudTh>
+                            <MudTh>AMOUNT</MudTh>
+                            <MudTh>STATUS</MudTh>
+                            <MudTh>DATE</MudTh>
+                            <MudTh>DELIVERY METHOD</MudTh>
+                        </HeaderContent>
+                        <RowTemplate Context="item">
+                            <MudTd DataLabel="Order ID">@item.Id.ToString().Substring(0, 8)</MudTd> @* Shorten ID for display *@
+                            <MudTd DataLabel="Customer">@item.CustomerAddress?.FullName</MudTd>
+                            <MudTd DataLabel="Amount">@item.TotalAmount.ToString("C2")</MudTd>
+                            <MudTd DataLabel="Status">
+                                <MudChip T="string" Color="@GetStatusColor(item.Status)">@item.Status</MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Order Date">@item.OrderDate.ToString("dd MMM yyyy HH:mm")</MudTd>
+                            <MudTd DataLabel="Delivery Method">@item.DeliveryDetails?.DeliveryMethod</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudPaper>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <div class="login-background">
+            <div class=" d-flex flex-column align-center justify-center flex-grow-1" style="min-height: 70vh;">
+                <MudCard Class="pa-8 ma-2 text-center" Style="max-width: 550px; min-width: 300px;">
+                    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Lock"
+                        Class="mb-4 pulse-animation">
+                        <MudText Typo="Typo.h5" Class="mb-2">Access Denied</MudText>
+                        <MudText Typo="Typo.body1">You must be logged in as an administrator to view this page.
+                        </MudText>
+                        <MudButton Href="Account/Login" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4">
+                            Login
+                        </MudButton>
+                    </MudAlert>
+                </MudCard>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+
+    private List<Order> _recentOrders = new List<Order>();
+    private decimal _totalSales = 0;
+    private int _ordersTodayCount = 0;
+    private int _lowStockItemCount = 0;
+    private const int CriticalStockThreshold = 100;
+    private const int LowStockThreshold = 210;
+
+    private static readonly System.Globalization.CultureInfo _kes = new System.Globalization.CultureInfo("en-KE");
+    private bool _isLoading = true;
+
+    private bool _isLoadingCharts = true;
+
+    // Chart-specific properties for Revenue Trends
+    private List<RevenueDataPoint>? _revenueData;
+    private List<ChartSeries> RevenueChartSeries = new();
+    private string[] RevenueChartLabels = Array.Empty<string>();
+    private ChartOptions _revenueChartOptions = new();
+
+    // Chart-specific properties for Orders by Category (donut chart)
+    private List<CategorySalesData>? _ordersByCategoryData;
+    private double[] OrdersByCategoryChartData = Array.Empty<double>();
+    private string[] OrdersByCategoryChartLabels = Array.Empty<string>();
+
+    private ChartOptions _ordersByCategoryChartOptions = new();
+
+    private bool _firstRenderComplete = false; // Flag for prerendering safety
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_firstRenderComplete)
+        {
+            _firstRenderComplete = true;
+            await LoadDashboardData();
+        }
+    }
+
+    private async Task LoadDashboardData()
+    {
+        _isLoading = true;
+        _isLoadingCharts = true;
+        StateHasChanged();
+
+        using (var context = await DbFactory.CreateDbContextAsync())
+        {
+            try
+            {
+                _recentOrders = await context.Orders
+                .Include(o => o.CustomerAddress)
+                .Include(o => o.DeliveryDetails)
+                .OrderByDescending(o => o.OrderDate)
+                .Take(10)
+                .ToListAsync();
+
+                _totalSales = await context.Orders
+                .Where(o => o.Status != "Cancelled" && o.Status != "Returned")
+                .SumAsync(o => o.TotalAmount);
+
+                // Calculate Orders Today
+                var today = DateTime.Today;
+                _ordersTodayCount = await context.Orders
+                .CountAsync(o => o.OrderDate.Date == today);
+
+                _lowStockItemCount = await context.Products.CountAsync(p => p.StockQuantity <= LowStockThreshold);
+                // -- Chart Data --
+                var chartEndDate = DateTime.Today;
+                var chartStartDate = DateTime.Today.AddDays(-29); // Last 30 days
+
+                // Revenue Trends Chart (Line Chart)
+                _revenueData = await SalesAnalyticsService.GetRevenueTrendsAsync(chartStartDate, chartEndDate);
+                if (_revenueData != null && _revenueData.Any())
+                {
+                    RevenueChartSeries = new List<ChartSeries>{new ChartSeries{
+Name = "Revenue",
+Data = _revenueData.Select(rd => (double)rd.Revenue).ToArray()
+}};
+                    RevenueChartLabels = _revenueData.Select(rd => rd.Date.ToString("MMM dd")).ToArray();
+                }
+                else
+                {
+                    RevenueChartSeries = new List<ChartSeries>();
+                    RevenueChartLabels = Array.Empty<string>();
+                }
+
+                // Orders by Category Chart (Donut Chart)
+                _ordersByCategoryData = await SalesAnalyticsService.GetSalesByCategoryAsync(chartStartDate, chartEndDate);
+                if (_ordersByCategoryData != null && _ordersByCategoryData.Any())
+                {
+                    OrdersByCategoryChartData = _ordersByCategoryData.Select(obc => (double)obc.TotalSales).ToArray();
+                    OrdersByCategoryChartLabels = _ordersByCategoryData.Select(obc => obc.CategoryName ?? "Unknown").ToArray();
+                }
+                else
+                {
+                    OrdersByCategoryChartData = Array.Empty<double>();
+                    OrdersByCategoryChartLabels = Array.Empty<string>();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                if (_firstRenderComplete)
+                {
+                    Snackbar.Add($"Error loading dashboard data: {ex.Message}", Severity.Error);
+                }
+                Console.WriteLine($"Error loading dashboard data: {ex.Message}");
+            }
+            finally
+            {
+                _isLoading = false;
+                _isLoadingCharts = false;
+                StateHasChanged();
+            }
+        }
+    }
+    // Initialize chart options here (OnInitializedAsync is better for this than OnAfterRenderAsync)
+    protected override Task OnInitializedAsync()
+    {
+        // Revenue Trends Chart Options
+        _revenueChartOptions = new ChartOptions
+        {
+            InterpolationOption = InterpolationOption.NaturalSpline,
+            YAxisFormat = "c", // Currency format (e.g., $1,000.00)
+            YAxisTicks = 5,
+            XAxisLines = true,
+            YAxisLines = true,
+            LineStrokeWidth = 2,
+            ShowLegend = true,
+            ChartPalette = new[] { Colors.Blue.Lighten1 } // Single color for the line
+        };
+
+        // Orders by Category Chart Options (Donut Chart)
+        _ordersByCategoryChartOptions = new ChartOptions
+        {
+            ChartPalette = new[] {Colors.Green.Default, Colors.Red.Default, Colors.Orange.Default,Colors.Purple.Default,
+Colors.Blue.Default, Colors.Teal.Default, Colors.Pink.Default},
+            ShowLegend = true,
+            ShowToolTips = true,
+        };
+
+        return base.OnInitializedAsync();
+    }
+
+    private Color GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "Completed" => Color.Success,
+            "Delivered" => Color.Success,
+            "Shipped" => Color.Warning,
+            "Pending" => Color.Info,
+            "Processing" => Color.Info,
+            "Cancelled" => Color.Error,
+            "Returned" => Color.Error,
+            _ => Color.Default,
+        };
+    }
+}

@@ -1,0 +1,111 @@
+@page "/products"
+
+@using TestP.Components.Layout
+@layout AdminLayout
+@rendermode InteractiveServer
+
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+
+@using TestP.Models
+@using TestP.Services
+@using MudBlazor
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+@inject IProductService ProductService
+
+<MudPaper Elevation="2"
+    Style="background-color:	#c9dcff; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  top: 0;z-index: 1000;">
+    <MudText Typo="Typo.h4" Class="mb-8 mt-4 text-bold" GutterBottom="true" Color="Color.Primary">Products</MudText>
+</MudPaper>
+
+
+<MudPaper MaxWidth="MaxWidth.ExtraExtraLarge">
+    <div class="d-flex justify-between items-center mb-4">
+        <div>
+            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Manage your products</MudText>
+        </div>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddProduct">
+            <MudIcon Icon="@Icons.Material.Filled.Add" />&nbsp;Add Product
+        </MudButton>
+    </div>
+
+    <MudTable Items="_products" Hover="true" Bordered="true" Striped="true">
+        <ToolBarContent>
+            <MudTextField @bind-Value="_searchTerm" Placeholder="Search..." Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Search" Class="mx-2" />
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Product</MudTh>
+            <MudTh>Description</MudTh>
+            <MudTh>Price</MudTh>
+            <MudTh>Brand</MudTh>
+            <MudTh>Stock</MudTh>
+            <MudTh class="text-right">Action</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Products">@context.Name</MudTd>
+            <MudTd DataLabel="Description">@context.Description</MudTd>
+            <MudTd DataLabel="Price">@context.Price</MudTd>
+            <MudTd DataLabel="Brand">@context.Brand</MudTd>
+            <MudTd DataLabel="Stock" Class="@GetRowClass(context)">@context.StockQuantity</MudTd>
+            <MudTd class="text-right">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="@(() => EditProduct(context))"
+                    Class="me-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Edit" /> Edit
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="@(() => DeleteProduct(context))">
+                    <MudIcon Icon="@Icons.Material.Filled.Delete" /> Delete
+                </MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudPaper>
+
+@code {
+    private List<Product> _products = new();
+    private string _searchTerm = "";
+    private const int CriticalStockThreshold = 100;
+    private const int LowStockThreshold = 210;
+
+
+    private string GetRowClass(Product product)
+    {
+        if (product.StockQuantity <= CriticalStockThreshold)
+            return "flash-red low-stock-warning";
+        else if (product.StockQuantity <= LowStockThreshold)
+            return "flash-orange mid-stock-warning";
+        else
+            return "text-success";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var allProducts = await ProductService.GetProductsAsync();
+        _products = allProducts.OrderBy(b => b.Name).ToList();
+    }
+
+    private void AddProduct()
+    {
+        NavigationManager.NavigateTo("/products/add");
+    }
+
+    private void EditProduct(Product product)
+    {
+        NavigationManager.NavigateTo($"/products/edit/{product.Id}");
+    }
+
+    private async Task DeleteProduct(Product product)
+    {
+        if (await DialogService.ShowMessageBox(
+        "Confirm Delete",
+        $"Are you sure you want to delete '{product.Name}'?",
+        yesText: "Yes", noText: "Cancel") == true)
+        {
+            var deleted = await ProductService.DeleteProductAsync(product.Id);
+            if (deleted)
+                _products = await ProductService.GetProductsAsync();
+        }
+    }
+}

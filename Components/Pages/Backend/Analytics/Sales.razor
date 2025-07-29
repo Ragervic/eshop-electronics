@@ -1,0 +1,319 @@
+@page "/sales"
+
+@using TestP.Components.Layout
+@layout AdminLayout
+
+@using TestP.Models
+@using TestP.Services
+@using TestP.Services.Analytics
+
+@using MudBlazor.Charts
+@* @using MudBlazor.Charts.Events *@
+@inject ISalesAnalyticsService SalesAnalyticsService
+@inject BreadCrumbService BreadCrumbService
+@inject NavigationManager NavManager
+
+<PageTitle>Sales Analytics</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-8">
+    <MudPaper Elevation="2"
+        Style="background-color:	#c9dcff; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  top: 0;z-index: 1000;">
+        <MudText Typo="Typo.h4" Class="mb-8 mt-4 text-bold" GutterBottom="true" Color="Color.Primary">Sales And
+            Analytics</MudText>
+    </MudPaper>
+    <MudGrid>
+
+        @* Header with Date Filter *@
+        <MudItem xs="12">
+            <MudCard Elevation="2" Class="pa-4">
+                <MudSelect T="DateRangeOption" Label="Period" Value="@_selectedDateRange"
+                    ValueChanged="@OnDateRangeChanged" Variant="Variant.Filled"
+                    AdornmentIcon="@Icons.Material.Filled.CalendarToday" AdornmentColor="Color.Primary" Dense="true"
+                    Class="mud-select-width-200">
+                    <MudSelectItem Value="DateRangeOption.Today">Today</MudSelectItem>
+                    <MudSelectItem Value="DateRangeOption.Last7Days">Last 7 Days</MudSelectItem>
+                    <MudSelectItem Value="DateRangeOption.Last30Days">Last 30 Days</MudSelectItem>
+                    <MudSelectItem Value="DateRangeOption.ThisMonth">This Month</MudSelectItem>
+                    <MudSelectItem Value="DateRangeOption.LastMonth">Last Month</MudSelectItem>
+                    <MudSelectItem Value="DateRangeOption.ThisYear">This Year</MudSelectItem>
+                    <MudSelectItem Value="DateRangeOption.LastYear">Last Year</MudSelectItem>
+                </MudSelect>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" md="8">
+            <MudCard Elevation="2">
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6">Revenue Trends</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    @if (_isLoadingCharts)
+                    {
+                        <MudProgressCircular Indeterminate="true" Class="d-flex justify-center my-8" />
+                    }
+                    else if (_revenueData == null || !_revenueData.Any())
+                    {
+                        <MudAlert Severity="Severity.Info" Class="my-4">No revenue data available for this period.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        @if (RevenueChartSeries.FirstOrDefault()?.Data?.Length >= 2)
+                        {
+                            var interpolation = RevenueChartSeries.FirstOrDefault()?.Data?.Length >= 4 ?
+                            InterpolationOption.NaturalSpline : InterpolationOption.Straight;
+                            _revenueChartOptions.InterpolationOption = interpolation;
+                            <MudChart ChartType="ChartType.Line" ChartOptions="_revenueChartOptions"
+                                ChartSeries="RevenueChartSeries" XAxisLabels="RevenueChartLabels" Height="250px" Width="100%" />
+                        }
+                        else
+                        {
+                            <MudAlert Severity="Severity.Info" Class="my-4">Not enough data to display chart (minimum 2 points
+                                required).</MudAlert>
+                        }
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        @* Sales by Category *@
+        <MudItem xs="12" md="4">
+            <MudCard Elevation="2">
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6">Sales by Category</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    @if (_isLoadingCharts)
+                    {
+                        <MudProgressCircular Indeterminate="true" Class="d-flex justify-center my-8" />
+                    }
+                    else if (_salesByCategory == null || !_salesByCategory.Any())
+                    {
+                        <MudAlert Severity="Severity.Info" Class="my-4">No category sales data available for this period.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudChart ChartType="ChartType.Donut" LegendPosition="Position.End" ChartOptions="_pieChartOptions"
+                            InputData="CategoryChartData" InputLabels="CategoryChartLabels" Height="250px" Width="100%" />
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        @* Top 5 Bestsellers *@
+        <MudItem xs="12" Class="mt-8">
+            <MudCard Elevation="2">
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6">Top 5 Bestsellers</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    @if (_isLoadingBestsellers)
+                    {
+                        <MudProgressCircular Indeterminate="true" />
+                    }
+                    else if (_topBestsellers == null || !_topBestsellers.Any())
+                    {
+                        <MudText>No bestsellers found for this period.</MudText>
+                    }
+                    else
+                    {
+                        <MudList T="BestsellerProduct" Class="pa-2">
+                            @foreach (var product in _topBestsellers)
+                            {
+                                <MudListItem>
+                                    <MudGrid Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                        <MudItem xs="8">
+                                            <MudText Typo="Typo.body1" Class="font-weight-medium">@product.ProductName</MudText>
+                                        </MudItem>
+                                        <MudItem xs="4" Class="d-flex justify-end">
+                                            <MudText Typo="Typo.body2" Color="Color.Primary">@product.SalesCount sales</MudText>
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudListItem>
+                                <MudDivider Class="my-2" />
+                            }
+                        </MudList>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private DateRangeOption _selectedDateRange = DateRangeOption.Today;
+    private List<RevenueDataPoint>? _revenueData;
+    private List<CategorySalesData>? _salesByCategory;
+    private List<BestsellerProduct>? _topBestsellers;
+
+    // Chart-specific properties
+    private List<ChartSeries> RevenueChartSeries = new();
+    private string[] RevenueChartLabels = Array.Empty<string>();
+    private ChartOptions _revenueChartOptions = new();
+
+    private double[] CategoryChartData = Array.Empty<double>();
+    private string[] CategoryChartLabels = Array.Empty<string>();
+    private ChartOptions _pieChartOptions = new();
+
+
+    private bool _isLoadingCharts = true;
+    private bool _isLoadingBestsellers = true;
+
+    // Enum to represent date range options for the filter
+    private enum DateRangeOption
+    {
+        Today,
+        Last7Days,
+        Last30Days,
+        ThisMonth,
+        LastMonth,
+        ThisYear,
+        LastYear
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        BreadCrumbService.Clear();
+        BreadCrumbService.AddItem("Admin", "/admin-dashboard");
+        BreadCrumbService.AddItem("Sales Analytics", "/sales");
+
+        // Initialize chart options for better appearance
+        _revenueChartOptions = new ChartOptions
+        {
+            InterpolationOption = InterpolationOption.NaturalSpline,
+            YAxisFormat = "c", // Currency format (e.g., $1,000.00)
+            YAxisTicks = 5,
+            XAxisLines = true,
+            YAxisLines = true,
+            LineStrokeWidth = 2,
+            ShowLegend = true,
+            ChartPalette = new[] { Colors.Blue.Lighten1 } // Single color for the line
+        };
+
+        _pieChartOptions = new ChartOptions
+        {
+            ChartPalette = new[] { Colors.Green.Default, Colors.Red.Default, Colors.Orange.Default,
+Colors.Purple.Default,Colors.Blue.Default },
+            ShowLegend = true
+        };
+        ;
+
+        await LoadAnalyticsData();
+    }
+
+    private async Task LoadAnalyticsData()
+    {
+        _isLoadingCharts = true;
+        _isLoadingBestsellers = true;
+        StateHasChanged();
+
+        // Determine start and end dates based on selectedDateRange
+        (DateTime startDate, DateTime endDate) = GetDateRange(_selectedDateRange);
+
+        // Simulate fetching data for charts
+        _revenueData = await SalesAnalyticsService.GetRevenueTrendsAsync(startDate, endDate);
+        _salesByCategory = await SalesAnalyticsService.GetSalesByCategoryAsync(startDate, endDate);
+
+        // Prepare data for Revenue Trends Chart (Line Chart)
+        if (_revenueData != null && _revenueData.Any())
+        {
+            // For line charts, MudChart expects List<ChartSeries> format
+            RevenueChartSeries = new List<ChartSeries>
+{
+new ChartSeries
+{
+Name = "Revenue",
+Data = _revenueData.Select(rd => (double)rd.Revenue).ToArray()
+}
+};
+            RevenueChartLabels = _revenueData.Select(rd => rd.Date.ToString("MMM dd")).ToArray(); // Format date for labels
+        }
+        else
+        {
+            RevenueChartSeries = new List<ChartSeries>();
+            RevenueChartLabels = Array.Empty<string>();
+        }
+
+        // Prepare data for Sales by Category Chart (Pie/Donut Chart)
+        if (_salesByCategory != null && _salesByCategory.Any())
+        {
+            CategoryChartData = _salesByCategory.Select(cs => (double)cs.TotalSales).ToArray();
+            CategoryChartLabels = _salesByCategory.Select(cs => cs.CategoryName ?? "Unknown").ToArray();
+        }
+        else
+        {
+            CategoryChartData = Array.Empty<double>();
+            CategoryChartLabels = Array.Empty<string>();
+        }
+        _isLoadingCharts = false;
+
+        // Simulate fetching data for bestsellers
+        _topBestsellers = await SalesAnalyticsService.GetTopBestsellersAsync(startDate, endDate, 5);
+        _isLoadingBestsellers = false;
+
+        StateHasChanged();
+    }
+
+    private (DateTime startDate, DateTime endDate) GetDateRange(DateRangeOption option)
+    {
+        DateTime endDate = DateTime.Today;
+        DateTime startDate = DateTime.Today;
+
+        switch (option)
+        {
+            case DateRangeOption.Today:
+                break;
+            case DateRangeOption.Last7Days:
+                startDate = DateTime.Today.AddDays(-6);
+                break;
+            case DateRangeOption.Last30Days:
+                startDate = DateTime.Today.AddDays(-29);
+                break;
+            case DateRangeOption.ThisMonth:
+                startDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+                break;
+            case DateRangeOption.LastMonth:
+                endDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).AddDays(-1);
+                startDate = new DateTime(endDate.Year, endDate.Month, 1);
+                break;
+            case DateRangeOption.ThisYear:
+                startDate = new DateTime(DateTime.Today.Year, 1, 1);
+                break;
+            case DateRangeOption.LastYear:
+                startDate = new DateTime(DateTime.Today.Year - 1, 1, 1);
+                endDate = new DateTime(DateTime.Today.Year - 1, 12, 31);
+                break;
+            default:
+                break;
+        }
+        return (startDate, endDate);
+    }
+
+    // This method will be called when the selected date range changes
+    private async Task OnDateRangeChanged(DateRangeOption newOption)
+    {
+        _selectedDateRange = newOption;
+        await LoadAnalyticsData();
+    }
+}
+<style>
+    .mud-select-width-200 {
+        width: 200px;
+    }
+
+    .mud-image-fit-content {
+        max-width: 100%;
+        height: auto;
+        object-fit: contain;
+    }
+
+    .mud-chart.mud-chart-pie .mud-chart-donut-hole {
+        r: 50px !important;
+        /* Adjust this value to control the hole size */
+    }
+
+    /* Or more generally if the inner circle just has a standard SVG class/structure */
+    .mud-chart svg>circle.some-inner-circle-class {
+        r: 50px !important;
+    }
+</style>

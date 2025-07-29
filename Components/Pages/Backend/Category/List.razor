@@ -1,0 +1,90 @@
+@page "/categories"
+@using TestP.Components.Layout
+@layout AdminLayout
+
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+
+@using TestP.Models
+@using TestP.Services
+@using MudBlazor
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+@inject ICategoryService CategoryService
+
+<MudPaper Elevation="2"
+    Style="background-color:	#c9dcff; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  top: 0;z-index: 1000;">
+    <MudText Typo="Typo.h4" Class="mb-8 mt-4 text-bold" GutterBottom="true" Color="Color.Primary">Categories</MudText>
+</MudPaper>
+
+
+<MudPaper MaxWidth="MaxWidth.ExtraLarge">
+    <div class="d-flex justify-between items-center mb-4">
+        <div>
+            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Manage your Categories</MudText>
+        </div>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Addcategory">
+            <MudIcon Icon="@Icons.Material.Filled.Add" />&nbsp;Add Category
+        </MudButton>
+    </div>
+
+    <MudTable Items="_categories" Hover="true" Bordered="true" Striped="true">
+        <ToolBarContent>
+            <MudTextField @bind-Value="_searchTerm" Placeholder="Search..." Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Search" Class="mx-2" />
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Categories</MudTh>
+            <MudTh>Category Count</MudTh>
+            <MudTh class="text-right">Action</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="categories">@context.Name</MudTd>
+            <MudTd DataLabel="categories">@context.ProductCount</MudTd>
+            <MudTd class="text-right">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="@(() => EditCategory(context))"
+                    Class="me-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Edit" /> Edit
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="@(() => DeleteCategory(context))">
+                    <MudIcon Icon="@Icons.Material.Filled.Delete" /> Delete
+                </MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudPaper>
+
+@code {
+    private List<Category> _categories = new();
+    private string _searchTerm = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var allCategories = await CategoryService.GetCategoriesAsync();
+        _categories = allCategories.OrderBy(b => b.Name).ToList();
+    }
+
+    private void Addcategory()
+    {
+        NavigationManager.NavigateTo("/categories/add");
+    }
+
+    private void EditCategory(Category category)
+    {
+        NavigationManager.NavigateTo($"/categories/edit/{category.Id}");
+    }
+
+    private async Task DeleteCategory(Category category)
+    {
+        if (await DialogService.ShowMessageBox(
+        "Confirm Delete",
+        $"Are you sure you want to delete '{category.Name}'?",
+        yesText: "Yes", noText: "Cancel") == true)
+        {
+            var deleted = await CategoryService.DeleteCategoryAsync(category.Id);
+            if (deleted)
+                _categories = await CategoryService.GetCategoriesAsync();
+        }
+    }
+}

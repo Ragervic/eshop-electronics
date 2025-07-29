@@ -1,0 +1,263 @@
+@page "/products/{ProductId:guid}"
+
+@using TestP.Models 
+@using TestP.Services 
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using TestP.Data
+@inject IProductService ProductService
+@inject CartService CartService
+@inject BreadCrumbService breadCrumbService
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+@inject IRecommendationsService RecommendationsService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>Product Details</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-8">
+    @if (_isLoading)
+    {
+        <MudProgressLinear Indeterminate="true" Class="my-4" />
+        <MudText Typo="Typo.body1">Loading product details...</MudText>
+    }
+    else if (_product == null)
+    {
+        <MudAlert Severity="Severity.Warning">Product not found.</MudAlert>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/" Class="mt-4">
+            Back to Home
+        </MudButton>
+    }
+    else
+    {
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/" Class="mt-4 mb-4">
+                Back to Home
+            </MudButton>
+        <MudPaper Elevation="6" Class="pa-4 rounded-lg">
+            <MudGrid Spacing="4">
+                <MudItem xs="12" sm="6">
+                    <MudCardMedia Image="@_product.ImageUrl" Height="500"
+                                  Style="object-fit: contain; background-color: #f0f0f0; border-radius: 8px;" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <div class="d-flex flex-column h-100">
+                        <MudText Typo="Typo.h4" GutterBottom="true">@_product.Name</MudText>
+
+                        @if (_product.Brand != null && !string.IsNullOrEmpty(_product.Brand))
+                        {
+                            <MudText Typo="Typo.subtitle1" Color="Color.Secondary" Class="mb-2">
+                                <MudIcon Icon="@Icons.Material.Filled.Storefront" Size="Size.Small" Class="mr-1" />
+                                Brand: <span class="font-weight-bold">@_product.Brand</span>
+                            </MudText>
+                        }
+
+                        @if (_product.Category != null && !string.IsNullOrEmpty(_product.Category.Name))
+                        {
+                            <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-4">
+                                <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Small" Class="mr-1" />
+                                Category: <span class="font-weight-bold">@_product.Category.Name</span>
+                            </MudText>
+                        }
+
+                        <MudText Typo="Typo.body1" Class="mb-4">
+                            @_product.Description
+                        </MudText>
+                        <MudSpacer/>
+
+
+                        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-4">
+                            KSh @_product.Price.ToString("N2")
+                        </MudText>
+                        <MudSpacer />
+
+
+
+                        <div class="d-flex align-center mb-4">
+                            @if (_product.StockQuantity > 0)
+                            {
+                                <MudText Typo="Typo.subtitle1" Class="mud-text-success d-flex align-center">
+                                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Class="mr-1" />
+                                    In Stock (@_product.StockQuantity available)
+                                </MudText>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.subtitle1" Class="mud-text-error d-flex align-center">
+                                    <MudIcon Icon="@Icons.Material.Filled.Cancel" Size="Size.Small" Class="mr-1" />
+                                    Out of Stock
+                                </MudText>
+                            }
+                        </div>
+                        <MudSpacer />
+
+
+                        <MudTextField @bind-Value="_quantityToAdd" Label="Quantity" Variant="Variant.Outlined"
+                                      InputType="InputType.Number" Min="1" Max="@(_product.StockQuantity)"
+                                      Adornment="Adornment.End" AdornmentText="units" Class="mb-4"
+                                      Style="max-width: 150px;" />
+                        <MudSpacer />
+                        <MudButton Variant="Variant.Filled" Color="Color.Success" Class="flex-grow-1" Size="Size.Large"
+                                   StartIcon="@Icons.Material.Filled.ShoppingCart"
+                                   OnClick="AddToCart" Disabled="@(_product.StockQuantity <= 0 || _quantityToAdd <= 0)">
+                            Add to Cart
+                        </MudButton>
+                    </div>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        @* Related Products Section *@
+        <MudText Typo="Typo.h5" Class="mt-8 mb-4">You might also like</MudText>
+        @if (_relatedProducts == null)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else if (!_relatedProducts.Any())
+        {
+            <MudText>No related products available at the moment.</MudText>
+        }
+        else
+        {
+            <MudGrid Spacing="3">
+                @foreach (var product in _relatedProducts)
+                {
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudCard Outlined="true" Class="d-flex flex-column h-100">
+                            <MudCardMedia Image="@product.ImageUrl" Height="150" Style="object-fit: cover;" />
+                            <MudCardContent Class="flex-grow-1">
+                                <MudText Typo="Typo.subtitle1" Class="mb-1">@product.Name</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-2">KSh @product.Price.ToString("N2")</MudText>
+                                @if (product.StockQuantity > 0)
+                                {
+                                    <MudText Typo="Typo.caption" Class="mud-text-success">
+                                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Class="mr-1" />
+                                        In Stock
+                                    </MudText>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.caption" Class="mud-text-error">
+                                        <MudIcon Icon="@Icons.Material.Filled.Cancel" Size="Size.Small" Class="mr-1" />
+                                        Out of Stock
+                                    </MudText>
+                                }
+                            </MudCardContent>
+                            <MudCardActions>
+                                <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" Href="@($"/products/{product.Id}")">View</MudButton>
+                                <MudButton Variant="Variant.Filled" Size="Size.Small" Color="Color.Success" OnClick="@(() => AddRelatedToCart(product))" StartIcon="@Icons.Material.Filled.ShoppingCart" Disabled="@(product.StockQuantity <= 0)">Add to Cart</MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public Guid ProductId { get; set; }
+
+    private Product? _product;
+    private bool _isLoading = true;
+    private int _quantityToAdd = 1; // Default quantity to add to cart
+    private List<Product>? _relatedProducts;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        breadCrumbService.Clear();
+        breadCrumbService.AddItem("Home", "/");
+        breadCrumbService.AddItem("Product Details", $"/products/{ProductId}");
+        _isLoading = true;
+        _product = null; // Clear previous product details
+        _quantityToAdd = 1; // Reset quantity
+        _relatedProducts = null; // Clear related products
+        StateHasChanged(); // Show loading state
+
+        try
+        {
+            // Fetch the product details including related Brand and Category
+            _product = await ProductService.FetchProductAsync(ProductId);
+            
+            // Get current user ID for personalized recommendations
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            string? userId = null;
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                var appUser = await UserManager.GetUserAsync(user);
+                userId = appUser?.Id;
+            }
+            
+            // Fetch related products based on current product category
+            if (_product?.CategoryId != null)
+            {
+                _relatedProducts = await RecommendationsService.GetProductsInSameCategoryAsync(_product.CategoryId, 6, ProductId);
+            }
+            else
+            {
+                // Fallback to personalized recommendations if no category
+                _relatedProducts = userId != null
+                    ? await RecommendationsService.GetPersonalizedRecommendationsAsync(userId)
+                    : new List<Product>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading product: {ex.Message}", Severity.Error);
+            Console.WriteLine($"Error loading product {ProductId}: {ex.Message}");
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged(); // Update UI with loaded data
+        }
+    }
+
+    private async Task AddToCart()
+    {
+        if (_product == null)
+        {
+            Snackbar.Add("Product data not available.", Severity.Error);
+            return;
+        }
+
+        if (_quantityToAdd <= 0)
+        {
+            Snackbar.Add("Please enter a quantity greater than zero.", Severity.Warning);
+            return;
+        }
+
+        if (_quantityToAdd > _product.StockQuantity)
+        {
+            Snackbar.Add($"Only {_product.StockQuantity} units are available in stock.", Severity.Warning);
+            _quantityToAdd = _product.StockQuantity; // Adjust quantity to max available
+            return;
+        }
+
+        await CartService.AddToCart(_product, _quantityToAdd);
+        Snackbar.Add($"Added {_quantityToAdd} x {_product.Name} to cart!", Severity.Success);
+        // Optionally, navigate to cart or show a confirmation dialog
+        NavigationManager.NavigateTo("/cart");
+    }
+
+    private async Task AddRelatedToCart(Product product)
+    {
+        if (product == null)
+        {
+            Snackbar.Add("Product data not available.", Severity.Error);
+            return;
+        }
+
+        if (product.StockQuantity <= 0)
+        {
+            Snackbar.Add($"'{product.Name}' is out of stock.", Severity.Warning);
+            return;
+        }
+
+        await CartService.AddToCart(product, 1);
+        Snackbar.Add($"Added {product.Name} to cart!", Severity.Success);
+    }
+}

@@ -1,0 +1,87 @@
+@page "/categories/add"
+@using TestP.Components.Layout
+@layout AdminLayout
+
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+
+@using Microsoft.EntityFrameworkCore
+@using MudBlazor
+@using TestP.Models
+@using TestP.Data
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+
+<PageTitle>Product Management - Add Category</PageTitle>
+
+<MudPaper Elevation="2"
+    Style="background-color:	#c9dcff; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  top: 0;z-index: 1000;">
+    <MudText Typo="Typo.h4" Class="mb-8 mt-4 text-bold" GutterBottom="true" Color="Color.Primary">Add Category
+    </MudText>
+</MudPaper>
+
+<MudPaper Class="pa-4">
+    <MudCard>
+        <MudForm Model="@category" @ref="form" enablevalidation="true">
+
+            <MudTextField @bind-Value="category.Name" Label="Category Name" Required="true"
+                RequiredError="Category Name is required!" />
+            <div class="d-flex justify-content-end mt-6">
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mr-2"
+                    OnClick="Addcategory">
+                    Add Category
+                </MudButton>
+                <MudButton Variant="Variant.Text" OnClick="GoBack">
+                    Cancel
+                </MudButton>
+            </div>
+        </MudForm>
+    </MudCard>
+</MudPaper>
+
+@code {
+    private Category category = new Category();
+    private MudForm? form;
+
+    protected override void OnInitialized()
+    {
+
+    }
+
+    private async Task Addcategory()
+    {
+        await form!.Validate();
+
+        if (form.IsValid)
+        {
+            var dbContext = DbFactory.CreateDbContext(); //Handles dependency injection
+            try
+            {
+                dbContext.Categories.Add(category);
+                await dbContext.SaveChangesAsync();
+
+                Snackbar.Add("Category added successfully!", Severity.Success);
+
+                StateHasChanged();
+                await Task.Delay(100); //Useful for navigation
+
+                NavigationManager.NavigateTo("/categories", forceLoad: true);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error adding category: {ex.Message}", Severity.Error);
+                Console.WriteLine($"Error adding category: {ex.Message}");
+            }
+        }
+        else
+        {
+            Snackbar.Add("Please correct the form errors.", Severity.Warning);
+        }
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/categories");
+    }
+}

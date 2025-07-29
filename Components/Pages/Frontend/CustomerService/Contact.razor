@@ -1,0 +1,155 @@
+@page "/contact"
+
+@using MudBlazor
+
+<PageTitle>Contact Us - eShop</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-8">
+    <MudGrid Justify="Justify.Center" Spacing="4">
+        <MudItem xs="12" Class="text-center">
+            <MudText Typo="Typo.h3" Color="Color.Dark" Class="mb-4">Get in Touch</MudText>
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="mud-text-secondary mb-6">
+                We'd love to hear from you! Reach out to us for any questions or support.
+            </MudText>
+            <MudDivider Class="my-8" />
+        </MudItem>
+
+        @* Contact Details *@
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="1"
+                Class="pa-6 rounded-lg d-flex flex-column align-center justify-center text-center fill-height">
+                <MudIcon Icon="@Icons.Material.Filled.Phone" Size="Size.Large" Color="Color.Primary" Class="mb-3" />
+                <MudText Typo="Typo.h6" Class="mb-2">Phone</MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary mb-4">Call us during business hours.</MudText>
+                <MudText Typo="Typo.h5" Class="mb-2">
+                    <MudLink Href="tel:+1234567890">+1 (234) 567-890</MudLink>
+                </MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="1"
+                Class="pa-6 rounded-lg d-flex flex-column align-center justify-center text-center fill-height">
+                <MudIcon Icon="@Icons.Material.Filled.Email" Size="Size.Large" Color="Color.Secondary" Class="mb-3" />
+                <MudText Typo="Typo.h6" Class="mb-2">Email</MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary mb-4">Send us an email anytime.</MudText>
+                <MudText Typo="Typo.h5" Class="mb-2">
+                    <MudLink Href="mailto:support@yourcompany.com">support@yourcompany.com</MudLink>
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="1"
+                Class="pa-6 rounded-lg d-flex flex-column align-center justify-center text-center fill-height">
+                <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Large" Color="Color.Tertiary"
+                    Class="mb-3" />
+                <MudText Typo="Typo.h6" Class="mb-2">Address</MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary mb-4">Visit our office or send us mail.</MudText>
+                <MudText Typo="Typo.h5" Class="mb-2">
+                    [Your Company Name]<br />
+                    [Your Street Address]<br />
+                    [City, State, Zip Code]<br />
+                    [Country]
+                </MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="1"
+                Class="pa-6 rounded-lg d-flex flex-column align-center justify-center text-center fill-height">
+                <MudIcon Icon="@Icons.Material.Filled.AccessTime" Size="Size.Large" Color="Color.Info" Class="mb-3" />
+                <MudText Typo="Typo.h6" Class="mb-2">Business Hours</MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary mb-4">We're available during these hours:</MudText>
+                <MudText Typo="Typo.h5" Class="mb-2">
+                    Mon - Fri: 9:00 AM - 5:00 PM<br />
+                    Sat - Sun: Closed
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudDivider Class="my-8" />
+        </MudItem>
+
+        @* Contact Form (Placeholder) *@
+        <MudItem xs="12" sm="10" md="8">
+            <MudPaper Elevation="2" Class="pa-6 rounded-lg">
+                <MudText Typo="Typo.h5" Class="mb-4 text-center">Send Us a Message</MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary mb-6 text-center">
+                    Use the form below to send us your inquiry. We'll get back to you as soon as possible.
+                </MudText>
+
+                <MudForm @ref="contactForm" Model="contactMessage">
+                    <MudTextField @bind-Value="contactMessage.Name" Label="Your Name" Required="true"
+                        RequiredError="Name is required!" Class="mb-4" />
+                    <MudTextField @bind-Value="contactMessage.Email" Label="Your Email" InputType="InputType.Email"
+                        Required="true" RequiredError="Email is required!" AdornmentIcon="@Icons.Material.Filled.Email"
+                        AdornmentText="." Class="mb-4" />
+                    <MudTextField @bind-Value="contactMessage.Subject" Label="Subject" Required="true"
+                        RequiredError="Subject is required!" Class="mb-4" />
+                    <MudTextField @bind-Value="contactMessage.Message" Label="Your Message" Lines="5" Required="true"
+                        RequiredError="Message is required!" Class="mb-6" />
+
+                    <MudButton OnClick="SubmitContactForm" Variant="Variant.Filled" Color="Color.Primary" Class="w-100"
+                        EndIcon="@Icons.Material.Filled.Send">
+                        Send Message
+                    </MudButton>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+
+        @* Map Placeholder *@
+        <MudItem xs="12">
+            <MudDivider Class="my-8" />
+        </MudItem>
+        <MudItem xs="12" sm="10" md="8">
+            <MudPaper Elevation="2" Class="pa-6 rounded-lg text-center">
+                <MudText Typo="Typo.h5" Class="mb-4">Find Us on the Map</MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary mb-4">
+                    Visit our location. Please note, this is a placeholder. You can embed a real map (e.g., Google Maps
+                    iframe) here.
+                </MudText>
+                <div
+                    style="height: 300px; background-color: #e0e0e0; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+                    <MudText Typo="Typo.h6" Color="Color.Dark">Map Placeholder</MudText>
+                </div>
+            </MudPaper>
+        </MudItem>
+
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private ContactMessage contactMessage = new ContactMessage();
+    private MudForm contactForm = new MudForm();
+
+    private async Task SubmitContactForm()
+    {
+        await contactForm.Validate();
+        if (contactForm.IsValid)
+        {
+            // In a real application, you would send this data to a backend service
+            // e.g., via an API call, an email service, etc.
+            Console.WriteLine($"Name: {contactMessage.Name}");
+            Console.WriteLine($"Email: {contactMessage.Email}");
+            Console.WriteLine($"Subject: {contactMessage.Subject}");
+            Console.WriteLine($"Message: {contactMessage.Message}");
+
+            // Show a success message
+            // You'll need to inject ISnackbar service for this
+            // @inject ISnackbar Snackbar
+            // Snackbar.Add("Your message has been sent successfully!", Severity.Success);
+
+            // Optionally clear the form
+            contactMessage = new ContactMessage();
+            @* contactForm.Reset(); *@
+        }
+    }
+
+    private class ContactMessage
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Subject { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
+    }
+}

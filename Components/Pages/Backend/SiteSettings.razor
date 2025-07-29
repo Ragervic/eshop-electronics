@@ -1,0 +1,425 @@
+@page "/settings"
+
+@using TestP.Components.Layout
+@layout AdminLayout
+
+@using MudBlazor
+@using TestP.Models
+@using System.ComponentModel.DataAnnotations
+@using TestP.Services
+@using System.IO
+@inject ISnackbar Snackbar
+@inject ISiteSettingsService SiteSettingsService
+@inject IWebHostEnvironment WebHostEnvironment
+
+<MudPaper Elevation="2"
+    Style="background-color:	#c9dcff; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  top: 0;z-index: 1000;">
+    <MudText Typo="Typo.h4" Class="mb-8 mt-4 text-bold" GutterBottom="true" Color="Color.Primary">Site Settings
+    </MudText>
+</MudPaper>
+
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="px-0">
+    <MudGrid>
+        @* General Information Section *@
+        <MudItem xs="12">
+            <MudCard Outlined="true">
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6">General Information</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudTextField @bind-Value="Settings.ContactEmail" Label="Contact Email" Variant="Variant.Outlined"
+                        Class="mb-3" />
+                    <MudTextField @bind-Value="Settings.ContactPhone" Label="Contact Phone" Variant="Variant.Outlined"
+                        Class="mb-3" />
+                    <MudTextField @bind-Value="Settings.CompanyAddress" Label="Company Address"
+                        Variant="Variant.Outlined" Lines="3" Class="mb-4" />
+
+                    @* Company Logo Upload *@
+                    <MudText Typo="Typo.subtitle1" Class="mb-2">Company Logo</MudText>
+                    <div class="d-flex align-center gap-4 mb-4">
+                        <InputFile OnChange="HandleLogoFileSelection" id="logo-file-input" hidden />
+                        <MudButton HtmlTag="label" Variant="Variant.Outlined" Color="Color.Primary"
+                            for="logo-file-input">
+                            Choose File
+                        </MudButton>
+                        <MudText>@_logoFileName</MudText>
+                        <MudButton OnClick="UploadNewLogo" Variant="Variant.Filled" Color="Color.Success"
+                            StartIcon="@Icons.Material.Filled.Upload" Disabled="_isUploadingLogo">
+                            @if (_isUploadingLogo)
+                            {
+                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                <MudText Class="ml-2">Uploading...</MudText>
+                            }
+                            else
+                            {
+                                <MudText>Upload New Logo</MudText>
+                            }
+                        </MudButton>
+                    </div>
+
+                    @* Website Banner Upload *@
+                    <MudText Typo="Typo.subtitle1" Class="mb-2">Website Name</MudText>
+                    <div class="d-flex align-center gap-4 mb-4">
+                        <MudTextField @bind-Value="Settings.WebsiteBanner" Label="Company Name"
+                            Variant="Variant.Outlined" Lines="3" Class="mb-4" />
+                        @* <InputFile OnChange="HandleBannerFileSelection" id="banner-file-input" hidden />
+                        <MudButton HtmlTag="label" Variant="Variant.Outlined" Color="Color.Primary"
+                            for="banner-file-input">
+                            Choose File
+                        </MudButton>
+                        <MudText>@_bannerFileName</MudText>
+                        <MudButton OnClick="UploadNewBanner" Variant="Variant.Filled" Color="Color.Success"
+                            StartIcon="@Icons.Material.Filled.Upload" Disabled="_isUploadingBanner">
+                            @if (_isUploadingBanner)
+                            {
+                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                <MudText Class="ml-2">Uploading...</MudText>
+                            }
+                            else
+                            {
+                                <MudText>Upload New Banner</MudText>
+                            }
+                        </MudButton> *@
+                    </div>
+
+                </MudCardContent>
+                <MudCardActions Class="pa-4">
+                    <MudButton OnClick="SaveGeneralSettings" Variant="Variant.Filled" Color="Color.Info"
+                        StartIcon="@Icons.Material.Filled.Save" FullWidth="true" Disabled="_isSavingGeneralSettings">
+                        @if (_isSavingGeneralSettings)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ml-2">Saving...</MudText>
+                        }
+                        else
+                        {
+                            <MudText>Save General Settings</MudText>
+                        }
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+
+        @* Shipping Policies Section *@
+        <MudItem xs="12">
+            <MudCard Outlined="true">
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6">Shipping Policies</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudTextField @bind-Value="Settings.ShippingPolicyDescription" Label="Shipping Policy Description"
+                        Variant="Variant.Outlined" Lines="4" Class="mb-3" />
+                    <MudNumericField @bind-Value="Settings.StandardShippingCost" Label="Standard Shipping Cost ($)"
+                        Variant="Variant.Outlined" Min="0.0M" Step="0.01M" Format="N2" Class="mb-3" T="decimal" />
+                    <MudNumericField @bind-Value="Settings.ExpressShippingCost" Label="Express Shipping Cost ($)"
+                        Variant="Variant.Outlined" Min="0.0M" Step="0.01M" Format="N2" Class="mb-3" T="decimal" />
+                </MudCardContent>
+                <MudCardActions Class="pa-4">
+                    <MudButton OnClick="SaveShippingPolicies" Variant="Variant.Filled" Color="Color.Info"
+                        StartIcon="@Icons.Material.Filled.Save" FullWidth="true" Disabled="_isSavingShippingPolicies">
+                        @if (_isSavingShippingPolicies)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ml-2">Saving...</MudText>
+                        }
+                        else
+                        {
+                            <MudText>Save Shipping Policies</MudText>
+                        }
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+
+        @* Tax & Pricing Rules Section *@
+        <MudItem xs="12">
+            <MudCard Outlined="true">
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6">Tax & Pricing Rules</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudNumericField @bind-Value="Settings.DefaultTaxRate" Label="Default Tax Rate (%)"
+                        Variant="Variant.Outlined" Min="0.0M" Max="100.0M" Step="0.1M" Format="N2" Class="mb-3"
+                        T="decimal" />
+                    <MudTextField @bind-Value="Settings.PricingRulesNotes" Label="Pricing Rules / Notes"
+                        Variant="Variant.Outlined" Lines="4" Class="mb-3" />
+                </MudCardContent>
+                <MudCardActions Class="pa-4">
+                    <MudButton OnClick="SaveTaxPricingRules" Variant="Variant.Filled" Color="Color.Info"
+                        StartIcon="@Icons.Material.Filled.Save" FullWidth="true" Disabled="_isSavingTaxPricingRules">
+                        @if (_isSavingTaxPricingRules)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ml-2">Saving...</MudText>
+                        }
+                        else
+                        {
+                            <MudText>Save Tax & Pricing Rules</MudText>
+                        }
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private SiteConfiguration Settings { get; set; } = new SiteConfiguration();
+
+    // --- File Upload Properties ---
+    private IBrowserFile? _logoFile;
+    private string _logoFileName = "No file chosen";
+    private bool _isUploadingLogo = false;
+
+    private IBrowserFile? _bannerFile;
+    private string _bannerFileName = "No file chosen";
+    private bool _isUploadingBanner = false;
+
+    // --- Loading States for Save Buttons ---
+    private bool _isSavingGeneralSettings = false;
+    private bool _isSavingShippingPolicies = false;
+    private bool _isSavingTaxPricingRules = false;
+
+    // --- Lifecycle Methods ---
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSiteSettings();
+    }
+
+    private async Task LoadSiteSettings()
+    {
+        try
+        {
+            Settings = await SiteSettingsService.GetSiteSettingsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading site settings: {ex.Message}", Severity.Error);
+            Settings = new SiteConfiguration();
+        }
+    }
+
+    // --- File Upload Handlers ---
+    private void HandleLogoFileSelection(InputFileChangeEventArgs e)
+    {
+        _logoFile = e.File;
+        _logoFileName = _logoFile?.Name ?? "No file chosen";
+        StateHasChanged(); // To update the UI with the file name
+    }
+
+    private async Task UploadNewLogo()
+    {
+        if (_logoFile == null)
+        {
+            Snackbar.Add("Please select a logo file first.", Severity.Warning);
+            return;
+        }
+
+        _isUploadingLogo = true;
+        try
+        {
+            // Save the file to wwwroot/images
+            var uploadsPath = Path.Combine(WebHostEnvironment.WebRootPath, "images");
+            if (!Directory.Exists(uploadsPath))
+            {
+                Directory.CreateDirectory(uploadsPath);
+            }
+
+            var fileExtension = Path.GetExtension(_logoFile.Name);
+            var uniqueFileName = $"logo_{Guid.NewGuid().ToString()}{fileExtension}";
+            var fullFilePath = Path.Combine(uploadsPath, uniqueFileName);
+
+            await using (var stream = _logoFile.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024)) // 5MB limit
+            {
+                await using (var fileStream = File.Create(fullFilePath))
+                {
+                    await stream.CopyToAsync(fileStream);
+                }
+            }
+
+            // Update the settings with the new logo path
+            Settings.CompanyLogo = Path.Combine("images", uniqueFileName).Replace("\\", "/");
+
+            // Save the settings
+            await SiteSettingsService.SaveSiteSettingsAsync(Settings);
+
+            Snackbar.Add($"Logo '{_logoFileName}' uploaded successfully!", Severity.Success);
+            _logoFileName = "No file chosen";
+            _logoFile = null;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error uploading logo: {ex.Message}", Severity.Error);
+            Console.WriteLine($"Error uploading logo: {ex.Message}");
+        }
+        finally
+        {
+            _isUploadingLogo = false;
+        }
+    }
+
+    private void HandleBannerFileSelection(InputFileChangeEventArgs e)
+    {
+        _bannerFile = e.File;
+        _bannerFileName = _bannerFile?.Name ?? "No file chosen";
+        StateHasChanged(); // To update the UI with the file name
+    }
+
+    private async Task UploadNewBanner()
+    {
+        if (_bannerFile == null)
+        {
+            Snackbar.Add("Please select a banner file first.", Severity.Warning);
+            return;
+        }
+
+        _isUploadingBanner = true;
+        try
+        {
+            // Save the file to wwwroot/images
+            var uploadsPath = Path.Combine(WebHostEnvironment.WebRootPath, "images");
+            if (!Directory.Exists(uploadsPath))
+            {
+                Directory.CreateDirectory(uploadsPath);
+            }
+
+            var fileExtension = Path.GetExtension(_bannerFile.Name);
+            var uniqueFileName = $"banner_{Guid.NewGuid().ToString()}{fileExtension}";
+            var fullFilePath = Path.Combine(uploadsPath, uniqueFileName);
+
+            await using (var stream = _bannerFile.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024)) // 5MB limit
+            {
+                await using (var fileStream = File.Create(fullFilePath))
+                {
+                    await stream.CopyToAsync(fileStream);
+                }
+            }
+
+            // Update the settings with the new banner path
+            Settings.WebsiteBanner = Path.Combine("images", uniqueFileName).Replace("\\", "/");
+
+            // Save the settings
+            await SiteSettingsService.SaveSiteSettingsAsync(Settings);
+
+            Snackbar.Add($"Banner '{_bannerFileName}' uploaded successfully!", Severity.Success);
+            _bannerFileName = "No file chosen";
+            _bannerFile = null;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error uploading banner: {ex.Message}", Severity.Error);
+            Console.WriteLine($"Error uploading banner: {ex.Message}");
+        }
+        finally
+        {
+            _isUploadingBanner = false;
+        }
+    }
+
+    // --- Save Button Handlers ---
+    private async Task SaveGeneralSettings()
+    {
+        _isSavingGeneralSettings = true;
+        try
+        {
+            // Validate the model
+            var validationResults = new List<ValidationResult>();
+            var validationContext = new ValidationContext(Settings);
+
+            if (!Validator.TryValidateObject(Settings, validationContext, validationResults, true))
+            {
+                var errors = string.Join(", ", validationResults.Select(v => v.ErrorMessage));
+                Snackbar.Add($"Validation errors: {errors}", Severity.Error);
+                return;
+            }
+
+            // Save the settings using the service
+            var savedSettings = await SiteSettingsService.SaveSiteSettingsAsync(Settings);
+
+            // Update the local settings with the saved data
+            Settings = savedSettings;
+
+            Snackbar.Add("General Settings saved successfully!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving General Settings: {ex.Message}", Severity.Error);
+            Console.WriteLine($"Error saving General Settings: {ex.Message}");
+        }
+        finally
+        {
+            _isSavingGeneralSettings = false;
+        }
+    }
+
+    private async Task SaveShippingPolicies()
+    {
+        _isSavingShippingPolicies = true;
+        try
+        {
+            // Validate shipping-related properties
+            var validationResults = new List<ValidationResult>();
+            var validationContext = new ValidationContext(Settings);
+
+            if (!Validator.TryValidateObject(Settings, validationContext, validationResults, true))
+            {
+                var errors = string.Join(", ", validationResults.Select(v => v.ErrorMessage));
+                Snackbar.Add($"Validation errors: {errors}", Severity.Error);
+                return;
+            }
+
+            // Save the settings using the service
+            var savedSettings = await SiteSettingsService.SaveSiteSettingsAsync(Settings);
+
+            // Update the local settings with the saved data
+            Settings = savedSettings;
+
+            Snackbar.Add("Shipping Policies saved successfully!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving Shipping Policies: {ex.Message}", Severity.Error);
+            Console.WriteLine($"Error saving Shipping Policies: {ex.Message}");
+        }
+        finally
+        {
+            _isSavingShippingPolicies = false;
+        }
+    }
+
+    private async Task SaveTaxPricingRules()
+    {
+        _isSavingTaxPricingRules = true;
+        try
+        {
+            // Validate tax-related properties
+            var validationResults = new List<ValidationResult>();
+            var validationContext = new ValidationContext(Settings);
+
+            if (!Validator.TryValidateObject(Settings, validationContext, validationResults, true))
+            {
+                var errors = string.Join(", ", validationResults.Select(v => v.ErrorMessage));
+                Snackbar.Add($"Validation errors: {errors}", Severity.Error);
+                return;
+            }
+
+            // Save the settings using the service
+            var savedSettings = await SiteSettingsService.SaveSiteSettingsAsync(Settings);
+
+            // Update the local settings with the saved data
+            Settings = savedSettings;
+
+            Snackbar.Add("Tax & Pricing Rules saved successfully!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving Tax & Pricing Rules: {ex.Message}", Severity.Error);
+            Console.WriteLine($"Error saving Tax & Pricing Rules: {ex.Message}");
+        }
+        finally
+        {
+            _isSavingTaxPricingRules = false;
+        }
+    }
+}

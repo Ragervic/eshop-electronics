@@ -1,0 +1,329 @@
+@page "/user-orders"
+
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+@using System.Security.Claims
+@using System.Linq;
+@using TestP.Data
+@using TestP.Models
+@using TestP.Services
+@using MudBlazor.Services
+
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject BreadCrumbService breadCrumbService
+
+<PageTitle>My Orders</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-8">
+            <MudText Typo="Typo.h4" GutterBottom="true">Orders</MudText>
+            <MudTabs Elevation="2" Rounded="true" PanelClass="px-4 py-6" Class="mb-4">
+                <MudTabPanel Text=@($"ONGOING/DELIVERED ({_ongoingOrders.Count})")>
+                    @if (!_ongoingOrders.Any() && !_isLoading)
+                    {
+                        <MudAlert Severity="Severity.Info" Class="mb-4">You have no ongoing or delivered orders yet.</MudAlert>
+                    }
+                    else if (_isLoading)
+                    {
+                        <MudProgressLinear Indeterminate="true" Class="my-4" />
+                        <MudText Typo="Typo.body1">Loading orders...</MudText>
+                    }
+                    else
+                    {
+                        @foreach (var orderDisplay in _ongoingOrders) 
+                        {
+                            <MudCard Outlined="true" Class="mb-4">
+                                <MudCardContent>
+                                    <MudGrid Spacing="2" Justify="Justify.FlexStart" AlignItems="AlignItems.Center">
+                                        <MudItem>
+                                            <MudImage Src="@orderDisplay.MainProductImageUrl" Width="60" Height="60"
+                                                      Style="object-fit: contain;" />
+                                        </MudItem>
+                                        <MudItem > 
+                                            <MudText Typo="Typo.h6">@orderDisplay.MainProductName</MudText>
+                                            <MudText Typo="Typo.body2" Class="mb-1">Order Nº
+                                                @orderDisplay.Order.Id.ToString().Substring(0, 8)</MudText>
+                                            <MudText Typo="Typo.body2">
+                                                @if (orderDisplay.Order.Status == "Delivered")
+                                                {
+                                                    <MudText Typo="Typo.body2" Color="Color.Success">Delivered on
+                                                        @orderDisplay.Order.DeliveryDetails.DeliveryDateEnd?.ToString("dd MMMM yyyy")</MudText>
+                                                }
+                                                else if (orderDisplay.Order.Status == "Pending" || orderDisplay.Order.Status == "Shipped")
+                                                {
+                                                    <MudText Typo="Typo.body2">Delivery between
+                                                        @orderDisplay.Order.DeliveryDetails.DeliveryDateStart?.ToString("dd MMMM") and
+                                                        @orderDisplay.Order.DeliveryDetails.DeliveryDateEnd?.ToString("dd MMMM")</MudText>
+                                                }
+                                                else
+                                                {
+                                                    <MudText Typo="Typo.body2">Status: @orderDisplay.Order.Status</MudText>
+                                                }
+                                            </MudText>
+                                            @if (orderDisplay.Order.DeliveryDetails?.DeliveryMethod == "Pickup Station")
+                                            {
+                                                <MudText Typo="Typo.body2">
+                                                    <MudChip T="string" Color="Color.Primary" Size="Size.Small"
+                                                             Icon="@Icons.Material.Filled.Storefront">@orderDisplay.Order.DeliveryDetails.PickupStationName</MudChip>
+                                                </MudText>
+                                            }
+                                        </MudItem>
+                                        <MudItem xs="12" Class="d-flex justify-end align-center flex-wrap gap-2"> 
+                                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => NavigateToOrderDetails(orderDisplay.Order.Id)">See details</MudButton>
+
+                                            @* Conditional Cancel Button *@
+                                            @if (orderDisplay.Order.Status != "Delivered" && orderDisplay.Order.Status != "Completed" && orderDisplay.Order.Status != "Cancelled" && orderDisplay.Order.Status != "Returned")
+                                            {
+                                                <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Cancel"
+                                                           OnClick="() => CancelOrder(orderDisplay.Order.Id)">Cancel Order</MudButton>
+                                            }
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudCardContent>
+                            </MudCard>
+                        }
+                    }
+                </MudTabPanel>
+                <MudTabPanel Text=@($"CANCELED/RETURNED ({_cancelledReturnedOrders.Count})")>
+                    @if (!_cancelledReturnedOrders.Any() && !_isLoading)
+                    {
+                        <MudAlert Severity="Severity.Info" Class="mb-4">You have no cancelled or returned orders.</MudAlert>
+                    }
+                    else if (_isLoading)
+                    {
+                        <MudProgressLinear Indeterminate="true" Class="my-4" />
+                        <MudText Typo="Typo.body1">Loading orders...</MudText>
+                    }
+                    else
+                    {
+                        @foreach (var orderDisplay in _cancelledReturnedOrders) 
+                        {
+                            <MudCard Outlined="true" Class="mb-4">
+                                <MudCardContent>
+                                    <MudGrid Spacing="2" Justify="Justify.FlexStart" AlignItems="AlignItems.Center">
+                                        <MudItem >
+                                            <MudImage Src="@orderDisplay.MainProductImageUrl" Width="60" Height="60"
+                                                      Style="object-fit: contain;" />
+                                        </MudItem>
+                                        <MudItem >
+                                            <MudText Typo="Typo.h6">@orderDisplay.MainProductName</MudText>
+                                            <MudText Typo="Typo.body2" Class="mb-1">Order Nº
+                                                @orderDisplay.Order.Id.ToString().Substring(0, 8)</MudText>
+                                            <MudText Typo="Typo.body2">Status: @orderDisplay.Order.Status</MudText>
+                                        </MudItem>
+                                        <MudItem xs="12"  Class="d-flex justify-end align-center">
+                                            <MudButton Variant="Variant.Text" Color="Color.Primary"
+                                                       OnClick="() => NavigateToOrderDetails(orderDisplay.Order.Id)">See details</MudButton>
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudCardContent>
+                            </MudCard>
+                        }
+                    }
+                </MudTabPanel>
+            </MudTabs>
+
+        </MudContainer>
+    </Authorized>
+    <NotAuthorized>
+        <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8 text-center">
+            <MudText Typo="Typo.h5" GutterBottom="true">Access Denied</MudText>
+            <MudText Typo="Typo.body1" Class="mb-4">You must be logged in to view your orders.</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/Account/Login">Log In Now</MudButton>
+            <MudText Typo="Typo.body2" Class="mt-2">Don't have an account? <MudLink Href="/Account/Register">Register
+                    here</MudLink>
+            </MudText>
+        </MudContainer>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    //DTO/ViewModel for product
+    public class OrderDisplayDto
+    {
+        public Order Order { get; set; } = new Order();
+        public string? MainProductName { get; set; }
+        public string? MainProductImageUrl { get; set; }
+    }
+
+    private List<OrderDisplayDto> _ongoingOrders = new();
+    private List<OrderDisplayDto> _cancelledReturnedOrders = new();
+    private bool _isLoading = true;
+    private bool _firstRenderComplete =false;  // Only show Snackbars if interactive rendering is complete
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender)
+        {
+            _firstRenderComplete=true;
+            await LoadOrders();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        breadCrumbService.Clear();
+        breadCrumbService.AddItem("Home", "/");
+        breadCrumbService.AddItem("orders", "/user-orders");
+        await LoadOrders(); 
+    }
+
+    private async Task LoadOrders()
+    {
+        _isLoading = true;
+        _ongoingOrders.Clear();
+        _cancelledReturnedOrders.Clear();
+        StateHasChanged(); 
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var userId = UserManager.GetUserId(user);
+            if (!string.IsNullOrEmpty(userId))
+            {
+                using (var context = await DbFactory.CreateDbContextAsync())
+                {
+                    try
+                    {
+                        var orders = await context.Orders
+                            .Where(o => o.UserId == userId)
+                            .Include(o => o.OrderItems)
+                            .Include(o => o.DeliveryDetails)
+                            .OrderByDescending(o => o.OrderDate)
+                            .ToListAsync();
+
+                        var productIds = orders
+                            .SelectMany(o => o.OrderItems)
+                            .Select(oi => oi.ProductId)
+                            .Where(id => id.HasValue) 
+                            .Select(id => id.Value)
+                            .Distinct()
+                            .ToList();
+
+                        var products = await context.Set<Product>() 
+                            .Where(p => productIds.Contains(p.Id))
+                            .ToDictionaryAsync(p => p.Id);
+
+                        var allOrderDisplays = orders.Select(order =>
+                        {
+                            var firstOrderItem = order.OrderItems.FirstOrDefault();
+                            Product? mainProduct = null;
+                            if (firstOrderItem != null && firstOrderItem.ProductId.HasValue && products.TryGetValue(firstOrderItem.ProductId.Value, out Product? foundProduct))
+                            {
+                                mainProduct = foundProduct;
+                            }
+
+                            return new OrderDisplayDto
+                            {
+                                Order = order,
+                                MainProductName = mainProduct?.Name ?? "Unknown Product",
+                                MainProductImageUrl = mainProduct?.ImageUrl ?? "images/placeholder.png"
+                            };
+                        }).ToList();
+
+                        _ongoingOrders = allOrderDisplays
+                            .Where(od => od.Order.Status != "Cancelled" && od.Order.Status != "Returned")
+                            .ToList();
+
+                        _cancelledReturnedOrders = allOrderDisplays
+                            .Where(od => od.Order.Status == "Cancelled" || od.Order.Status == "Returned")
+                            .ToList();
+                    }
+                    catch (Exception ex)
+                    {
+                        if(_firstRenderComplete)
+                        {
+                            Snackbar.Add($"Error loading orders: {ex.Message}", Severity.Error);
+                        }
+                        Snackbar.Add("An error occurred while loading orders. Please try again later.", Severity.Error);
+                    }
+                    finally
+                    {
+                        _isLoading = false;
+                    }
+                }
+            }
+            else
+            {
+                _isLoading = false;
+            }
+        }
+        else
+        {
+            _isLoading = false;
+        }
+    }
+
+
+    private void NavigateToOrderDetails(Guid orderId)
+    {
+        NavigationManager.NavigateTo($"/orderdetails/{orderId}");
+    }
+
+    
+
+    private async Task CancelOrder(Guid orderId)
+    {
+        using (var context = await DbFactory.CreateDbContextAsync())
+        {
+            try
+            {
+                var orderToCancel = await context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
+                if(orderToCancel == null)
+                {
+                    if (_firstRenderComplete)
+                    {
+                        Snackbar.Add("Order not found.", Severity.Error);
+                    }
+                    return;
+                }
+
+                if (orderToCancel.Status == "Delivered" || orderToCancel.Status == "Completed" || orderToCancel.Status == "Cancelled" || orderToCancel.Status == "Returned")
+                {
+                    if (_firstRenderComplete)
+                    {
+                    Snackbar.Add($"Order {orderToCancel.Id.ToString().Substring(0, 8)} cannot be cancelled as it is already {orderToCancel.Status}.", Severity.Warning);
+                    }
+                    return;
+                }
+            
+                if (orderToCancel != null)
+                {
+                    orderToCancel.Status = "Cancelled";
+                    await context.SaveChangesAsync();
+
+                    if (_firstRenderComplete)
+                    {
+                        Snackbar.Add("Order cancelled successfully!", Severity.Success);
+                    }
+                    await LoadOrders();
+                }
+                else
+                {
+                    if (_firstRenderComplete)
+                    {
+                        Snackbar.Add("Order not found.", Severity.Error);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                if (_firstRenderComplete)
+                {
+                    Snackbar.Add($"Error cancelling order: {ex.Message}", Severity.Error);
+                }
+                Console.WriteLine($"Error cancelling order: {ex.Message}");
+            }
+        }
+    }
+}

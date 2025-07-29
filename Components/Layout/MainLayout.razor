@@ -1,0 +1,171 @@
+﻿@using TestP.Components.Custom
+@using TestP.Models
+@using TestP.Services
+
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject NavigationManager NavigationManager
+@inject BreadCrumbService breadCrumbService
+@inject ISiteSettingsService SiteSettingsService
+
+
+<MudThemeProvider @rendermode="InteractiveServer" />
+<MudPopoverProvider @rendermode="InteractiveServer" />
+<MudDialogProvider @rendermode="InteractiveServer" />
+<MudSnackbarProvider @rendermode="InteractiveServer" />
+
+<CascadingAuthenticationState>
+    @* Only apply the layout if not on the Login page directly*@
+    @if (!currentUrl.StartsWith("Account/Login", StringComparison.OrdinalIgnoreCase) &&
+        !currentUrl.StartsWith("Account/Register", StringComparison.OrdinalIgnoreCase))
+    {
+        <MudLayout Class="ps-4">
+            <MudAppBar Elevation="1" Dense="false" Fixed="true" Color="Color.Dark">
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit"
+                    OnClick="() => _drawerOpen = !_drawerOpen" Edge="Edge.Start" />
+                <a href="/" class="d-flex align-center text-decoration-none">
+                    @if (!string.IsNullOrEmpty(_siteSettings?.CompanyLogo))
+                    {
+                        <MudImage Src="@_siteSettings.CompanyLogo" Alt="Company Logo" Width="40" Height="40" Class="mr-2"
+                            Style="object-fit: contain;" />
+                    }
+                    <MudText Typo="Typo.h5" Color="Color.Secondary">@_siteSettings?.WebsiteBanner</MudText>
+                </a>
+                <MudSpacer />
+                <MudTextField T="string" Placeholder="Search products, brands and categories" Variant="Variant.Filled"
+                    Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Inherit"
+                    Class="flex-grow-1 mx-4 text-size:30px; centered-placeholder-input"
+                    Style="max-width: 600px; border-radius:  30px;background-color: white;" Clearable="true"
+                    @bind-Value="_searchString" OnAdornmentClick="PerformSearch" OnKeyDown="OnSearchKeyDown" />
+                <MudSpacer />
+                <MudStack AlignItems="AlignItems.Center" Spacing="2" Row="true">
+                    <AuthorizeView>
+                        <Authorized Context="authState">
+                            <MudNavLink Href="Account/Manage" Match="NavLinkMatch.Prefix"
+                                Icon="@Icons.Material.Filled.Person">
+                                Profile</MudNavLink>
+                            <form action="Account/Logout" method="post">
+                                <AntiforgeryToken />
+                                <input type="hidden" name="ReturnUrl" value="/" />
+                                <button type="submit" class="mud-nav-link mud-ripple">
+                                    <MudIcon Icon="@Icons.Material.Filled.Logout" Color="Color.Info" Class="mr-3"></MudIcon>
+                                    Logout
+                                </button>
+                            </form>
+                            @if (authState.User.IsInRole(UserRoles.Customer) || !authState.User.IsInRole(UserRoles.Admin))
+                            {
+                                <MudNavLink Href="/cart" Match="NavLinkMatch.Prefix" IconColor="Color.Secondary"
+                                    Icon="@Icons.Material.Filled.ShoppingCart">
+                                    Cart</MudNavLink>
+                                <MudNavLink Href="/user-orders" Match="NavLinkMatch.Prefix"
+                                    Icon="@Icons.Material.Filled.BookmarkBorder">Orders
+                                </MudNavLink>
+                            }
+                        </Authorized>
+                        <NotAuthorized>
+                            @* Non-Logged-in Users (Guests) *@
+                            <MudNavLink Href="Account/Login" Match="NavLinkMatch.Prefix" IconColor="Color.Secondary"
+                                Icon="@Icons.Material.Filled.Login">
+                                Login
+                            </MudNavLink>
+                            <MudNavLink Href="Account/Register" Match="NavLinkMatch.Prefix" IconColor="Color.Secondary"
+                                Icon="@Icons.Material.Filled.PersonAdd">
+                                Register
+                            </MudNavLink>
+                            <MudNavLink Href="/cart" Match="NavLinkMatch.Prefix" IconColor="Color.Secondary"
+                                Icon="@Icons.Material.Filled.ShoppingCart">
+                                Cart
+                            </MudNavLink>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </MudStack>
+            </MudAppBar>
+
+            @* <MudDrawer id="admin-nav-drawer" @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Docked" Elevation="2"
+                Style="d-none;">
+                <NavMenu />
+            </MudDrawer> *@
+
+
+            <MudMainContent Class="pt-16 pa-4">
+                <MudPaper Class="pa-4 mb-4">
+                    <MudBreadcrumbs Items="@_breadCrumbs" Separator=">"></MudBreadcrumbs>
+                </MudPaper>
+                @Body
+            </MudMainContent>
+            <Footer />
+        </MudLayout>
+    }
+    else
+    {
+        @* Render only Body for Login/Register pages, as they might have a custom layout or no layout. *@
+        <MudMainContent>
+            @Body
+        </MudMainContent>
+    }
+</CascadingAuthenticationState>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    private bool _drawerOpen = false;
+    private string? currentUrl;
+    private string? _searchString;
+    List<BreadcrumbItem> _breadCrumbs = new();
+    private SiteConfiguration? _siteSettings;
+
+    protected override async Task OnInitializedAsync()
+    {
+        breadCrumbService.OnChange += UpdateBreadCrumbs;
+        UpdateBreadCrumbs();
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+        try
+        {
+            _siteSettings = await SiteSettingsService.GetSiteSettingsAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading site settings: {ex.Message}");
+            // Use default settings if loading fails
+            _siteSettings = new SiteConfiguration();
+        }
+    }
+    private void UpdateBreadCrumbs()
+    {
+        _breadCrumbs = breadCrumbService.GetItems();
+        StateHasChanged();
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        breadCrumbService.OnChange -= UpdateBreadCrumbs;
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+
+    private void PerformSearch()
+    {
+        if (!string.IsNullOrWhiteSpace(_searchString))
+        {
+            NavigationManager.NavigateTo($"/?q={_searchString}");
+        }
+    }
+
+    private void OnSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            PerformSearch();
+        }
+    }
+}

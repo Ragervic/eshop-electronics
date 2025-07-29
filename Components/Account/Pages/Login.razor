@@ -1,0 +1,223 @@
+﻿@page "/Account/Login"
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Mvc
+@using Microsoft.AspNetCore.Mvc.RazorPages
+@using TestP.Data
+@using TestP.Models
+@using TestP.Components.Account.Shared
+@inject SignInManager<ApplicationUser> SignInManager
+@inject ILogger<Login> Logger
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>Log in</PageTitle>
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="d-flex align-center justify-center flex-grow-1"
+    Style="min-height: 100vh;">
+    <MudGrid Justify="Justify.Center" Spacing="4" Class="mud-elevation-25 rounded-lg overflow-hidden flex-grow-1"
+        Style="max-width: 1000px; height: 100%;">
+
+        <MudItem xs="12" sm="6" Class="d-none d-sm-flex align-center justify-center pa-0" Style="background-image: url('/images/login.jpg');
+                background-size: cover;   
+                background-position: center center; 
+                min-height: 500px;
+                flex-direction: column;">
+        </MudItem>
+
+        <MudItem xs="12" sm="6" Class="d-flex align-center justify-center pa-8">
+            <MudCard Elevation="0" Class="mud-width-full">
+                <MudCardHeader Class="justify-center">
+                    <StatusMessage Message="@errorMessage" />
+                    <MudText Typo="Typo.h4" Class="mb-3">Login to eShop</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
+                        <DataAnnotationsValidator />
+
+                        <MudText GutterBottom="true" Typo="Typo.body1">Use a local account to log in.</MudText>
+
+                        <MudGrid>
+                            <MudItem md="12">
+                                <MudStaticTextField For="@(() => Input.Email)" @bind-Value="Input.Email" Label="Email"
+                                    Placeholder="name@example.com"
+                                    UserAttributes="@(new() { { "autocomplete", "username" }, { "aria-required", "true" } })" />
+                            </MudItem>
+                            <MudItem md="12">
+                                <MudStaticTextField For="@(() => Input.Password)" @bind-Value="Input.Password"
+                                    Label="Password" InputType="InputType.Password" Placeholder="password"
+                                    UserAttributes="@(new() { { "autocomplete", "current-password" }, { "aria-required", "true" } })" />
+                            </MudItem>
+                            <MudItem md="12">
+                                <MudStaticCheckBox For="@(() => Input.RememberMe)" @bind-Value="Input.RememberMe">
+                                    Remember me
+                                </MudStaticCheckBox>
+                            </MudItem>
+                            <MudItem md="12">
+                                <MudStaticButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                                    FormAction="FormAction.Submit">Log in</MudStaticButton>
+                            </MudItem>
+                        </MudGrid>
+                    </EditForm>
+
+                    @* External Login Section *@
+                    <MudDivider Class="my-4" />
+                    <MudText Typo="Typo.body2" Class="text-center mb-3" Color="Color.Secondary">
+                        Or continue with
+                    </MudText>
+                    <div class="external-login-container">
+                        <ExternalLoginPicker />
+                    </div>
+                </MudCardContent>
+                <MudCardActions Class="d-flex flex-column align-center">
+                    <MudLink Href="Account/ForgotPassword">Forgot your password?</MudLink><br />
+                    <MudLink
+                        Href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">
+                        Register as a new user</MudLink><br />
+                    <MudLink Href="Account/ResendEmailConfirmation">Resend email confirmation</MudLink>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private string? errorMessage;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (HttpMethods.IsGet(HttpContext.Request.Method))
+        {
+            // Clear the existing external cookie to ensure a clean login process
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+        }
+    }
+
+    public async Task LoginUser()
+    {
+        errorMessage = null;
+
+
+        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure:
+        false);
+
+        if (result.Succeeded)
+        {
+            Logger.LogInformation("User logged in.");
+
+            var user = HttpContext.User;
+
+            // Check if the user is an Admin or SuperAdmin
+
+            if (user.IsInRole(UserRoles.Admin))
+            {
+                RedirectManager.RedirectTo("/admin-dashboard");
+            }
+            else
+            {
+                RedirectManager.RedirectTo("/");
+            }
+        }
+        else if (result.RequiresTwoFactor)
+        {
+            RedirectManager.RedirectTo(
+            "Account/LoginWith2fa",
+            new() { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });
+        }
+        else if (result.IsLockedOut)
+        {
+            Logger.LogWarning("User account locked out.");
+            RedirectManager.RedirectTo("Account/Lockout");
+        }
+        else
+        {
+            errorMessage = "Error: Invalid login attempt.";
+        }
+    }
+
+    public class LogoutModel : PageModel
+    {
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly ILogger<LogoutModel> _logger;
+
+        public LogoutModel(SignInManager<ApplicationUser> signInManager, ILogger<LogoutModel> logger)
+        {
+            _signInManager = signInManager;
+            _logger = logger;
+        }
+
+        public async Task<IActionResult> OnPost(string? returnUrl = null)
+        {
+            await _signInManager.SignOutAsync();
+            _logger.LogInformation("User logged out.");
+
+            if (returnUrl != null)
+            {
+                // This is where the URL is validated.
+                // If returnUrl is something like "/home" and the current URL is already "/Account/Logout",
+                // the system expects a full path. However, sometimes issues arise if it's implicitly trying
+                // to make it relative to a base that doesn't expect it.
+                // The simplest and safest is to ensure you're doing a LocalRedirect.
+                return LocalRedirect(returnUrl);
+            }
+            else
+            {
+                // This is the default if no returnUrl is provided or valid.
+                return RedirectToPage("/login"); // This typically redirects to /Account/Login
+            }
+        }
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = "";
+
+        [Required]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = "";
+
+        [Display(Name = "Remember me?")]
+        public bool RememberMe { get; set; }
+    }
+}
+
+<style>
+    .external-login-container {
+        width: 100%;
+    }
+
+    .external-login-container .external-login-buttons {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .external-login-container .external-login-btn {
+        width: 100%;
+        justify-content: center;
+        font-size: 14px;
+        padding: 10px 16px;
+        min-height: 40px;
+    }
+
+    .external-login-container .provider-icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    .external-login-container .provider-text {
+        font-size: 14px;
+    }
+</style>

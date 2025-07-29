@@ -1,0 +1,112 @@
+@page "/categories/edit/{Id:int}"
+@using TestP.Components.Layout
+@layout AdminLayout
+
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+
+@using TestP.Models
+@using TestP.Services
+@using TestP.Data
+@using Microsoft.EntityFrameworkCore
+
+@inject ICategoryService CategoryService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+
+
+<PageTitle>Product Management - Edit a Category</PageTitle>
+
+<MudPaper Elevation="2"
+    Style="background-color:	#c9dcff; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  top: 0;z-index: 1000;">
+    <MudText Typo="Typo.h4" Class="mb-8 mt-4 text-bold" GutterBottom="true" Color="Color.Primary">Edit Category
+    </MudText>
+</MudPaper>
+
+@if (category == null)
+{
+    <MudText Typo="Typo.h5" Align="Align.Center">Loading category details...</MudText>
+    <MudProgressLinear Indeterminate="true" Class="my-4" />
+}
+else
+{
+    <MudPaper Class="pa-4">
+        <MudCard>
+            <MudForm Model="@category" @ref="form" enablevalidation="true">
+                <MudText Typo="Typo.h6" GutterBottom="true">Edit Category</MudText>
+                <MudTextField @bind-Value="category.Name" Label="Category Name" Required="true"
+                    RequiredError="Category Name is required!" />
+                <div class="d-flex justify-content-end mt-6">
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mr-2"
+                        OnClick="HandleValidSubmit">
+                        Save Changes
+                    </MudButton>
+                    <MudButton Variant="Variant.Text" OnClick="GoBack">
+                        Cancel
+                    </MudButton>
+                </div>
+            </MudForm>
+        </MudCard>
+    </MudPaper>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    private Category? category;
+    private MudForm? form;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (category == null || category.Id != Id)
+        {
+            using var dbContext = DbFactory.CreateDbContext();
+            category = await dbContext.Categories.FindAsync(Id);
+
+            if (category == null)
+            {
+                Snackbar.Add($"Category with ID {Id} not found.", Severity.Error);
+                NavigationManager.NavigateTo("/categories");
+            }
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (form == null) return;
+        await form.Validate();
+
+        if (form.IsValid)
+        {
+            using var dbContext = DbFactory.CreateDbContext();
+            try
+            {
+                dbContext.Entry(category!).State = EntityState.Modified;
+                await dbContext.SaveChangesAsync();
+
+                Snackbar.Add("Category updated successfully!", Severity.Success);
+                NavigationManager.NavigateTo("/categories");
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error updating category: {ex.Message}", Severity.Error);
+                Console.WriteLine($"Error updating category: {ex.Message}");
+            }
+        }
+        else
+        {
+            Snackbar.Add("Please correct the form errors.", Severity.Warning);
+        }
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/categories");
+    }
+}

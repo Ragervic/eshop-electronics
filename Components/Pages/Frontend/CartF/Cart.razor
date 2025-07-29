@@ -1,0 +1,160 @@
+@page "/cart"
+@using TestP.Models
+@using TestP.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using TestP.Data
+@inject CartService cartService
+@inject BreadCrumbService breadCrumbService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@inject IRecommendationsService RecommendationsService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>Your Cart</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-8">
+    <MudGrid>
+        @* Left Column: Cart Items *@
+        <MudItem xs="12" md="8">
+            <MudText Typo="Typo.h4" GutterBottom="true">Cart (@cartService.GetTotalItems())</MudText>
+
+            @if (!cartService.GetCartItems().Any())
+            {
+                <MudAlert Severity="Severity.Info">Your cart is empty. <MudLink Href="/">Start shopping!</MudLink>
+                </MudAlert>
+            }
+            else
+            {
+                @foreach (var item in cartService.GetCartItems())
+                {
+                    <CartItemComponent Item="@item" />
+                }
+            }
+        </MudItem>
+
+        @* Right Column: Cart Summary *@
+        <MudItem xs="12" md="4">
+            <MudCard>
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6">CART SUMMARY</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudText Typo="Typo.body1" Class="d-flex justify-content-between align-center">
+                        Subtotal <span class="mud-text-h6 text-bold"> KSh
+                            @cartService.GetSubtotal().ToString("N0")</span>
+                    </MudText>
+                    <MudText Typo="Typo.body2" Class="mb-4">Delivery fees not included yet.</MudText>
+                    <MudButton OnClick="ProceedToCheckout" Variant="Variant.Filled" Color="Color.Warning"
+                        Size="Size.Large" FullWidth="true">
+                        Checkout (KSh @cartService.GetSubtotal().ToString("N0"))
+                    </MudButton>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudText Typo="Typo.body2" Class="px-4 py-2">Returns are easy <MudLink Href="#">Free return within 7
+                            days </MudLink>
+                    </MudText>
+                </MudCardActions>
+            </MudCard>
+
+            @* Recommendations Section *@
+            <MudCard Class="mt-8">
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6">Recommended for You</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    @if (_recommendations == null)
+                    {
+                        <MudProgressCircular Indeterminate="true" />
+                    }
+                    else if (!_recommendations.Any())
+                    {
+                        <MudText>No recommendations available at the moment.</MudText>
+                    }
+                    else
+                    {
+                        <MudGrid Spacing="2">
+                            @foreach (var product in _recommendations)
+                            {
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudPaper Elevation="2" Class="pa-2 d-flex flex-column align-center">
+                                        <MudImage Src="@product.ImageUrl" Width="100" Height="70" Class="mb-2" />
+                                        <MudText Class="mb-1">@product.Name</MudText>
+                                        <MudButton Variant="Variant.Text" Color="Color.Info"
+                                            Href="@($"/products/{product.Id}")">Details</MudButton>
+                                        <MudButton Variant="Variant.Filled" Color="Color.Success"
+                                            OnClick="@(() => AddCartOnClickAsync(product))" Size="Size.Small"
+                                            StartIcon="@Icons.Material.Filled.ShoppingCart">Add to Cart</MudButton>
+                                    </MudPaper>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private List<Product>? _recommendations;
+    // IDisposable is crucial for event subscriptions to prevent memory leaks
+    protected override async Task OnInitializedAsync()
+    {
+        breadCrumbService.Clear();
+        breadCrumbService.AddItem("Home", "/");
+        breadCrumbService.AddItem("Cart", "/cart");
+        cartService.OnCartChange += Cart_changed;
+
+        // Get current user ID
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        string? userId = null;
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var appUser = await UserManager.GetUserAsync(user);
+            userId = appUser?.Id;
+        }
+        _recommendations = userId != null
+        ? await RecommendationsService.GetPersonalizedRecommendationsAsync(userId)
+        : new List<Product>();
+    }
+
+    public void Dispose()
+    {
+        cartService.OnCartChange -= Cart_changed;
+    }
+    private void Cart_changed()
+    {
+        // This method can be used to handle any additional logic when the cart changes
+        // For example, you might want to log the change or update some other state
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void ProceedToCheckout()
+    {
+        if (!cartService.GetCartItems().Any())
+        {
+            Snackbar.Add("Your cart is empty. Add items before proceeding to checkout.", Severity.Warning);
+            return;
+        }
+        NavManager.NavigateTo("/checkout");
+    }
+
+    private async Task AddCartOnClickAsync(Product product)
+    {
+        if (product == null)
+        {
+            Snackbar.Add("Error: Product information is missing.", Severity.Error);
+            return;
+        }
+        if (product.StockQuantity <= 0)
+        {
+            Snackbar.Add($"'{product.Name}' is out of stock.", Severity.Warning);
+            return;
+        }
+        await cartService.AddToCart(product, 1);
+        Snackbar.Add($"Added '{product.Name}' to cart!", Severity.Success);
+    }
+}

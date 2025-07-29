@@ -1,0 +1,145 @@
+﻿@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Identity
+@using MudBlazor
+@using TestP.Data
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityRedirectManager RedirectManager
+
+@if (externalLogins.Length == 0)
+{
+    <MudAlert Variant="Variant.Text" Severity="Severity.Warning">
+        There are no external authentication services configured.
+    </MudAlert>
+    <MudText Typo="Typo.body1" Class="pt-4">
+        See <MudLink Target="_blank" Href="https://go.microsoft.com/fwlink/?LinkID=532715">this article</MudLink>
+        about setting up this ASP.NET application to support logging in via external services
+    </MudText>
+}
+else
+{
+    <form class="form-horizontal" action="Account/PerformExternalLogin" method="post">
+        <div class="external-login-container">
+            <AntiforgeryToken />
+            <input type="hidden" name="ReturnUrl" value="@ReturnUrl" />
+
+            <div class="external-login-buttons">
+                @foreach (var provider in externalLogins)
+                {
+                    <button type="submit" class="external-login-btn @GetProviderClass(provider.Name)" name="provider"
+                        value="@provider.Name" title="Log in using your @provider.DisplayName account">
+                        <img src="@GetProviderIcon(provider.Name)" alt="@provider.DisplayName" class="provider-icon" />
+                        <span class="provider-text">Continue with @provider.DisplayName</span>
+                    </button>
+                }
+            </div>
+        </div>
+    </form>
+}
+
+<style>
+    .external-login-container {
+        width: 100%;
+        margin: 20px 0;
+    }
+
+    .external-login-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+    }
+
+    .external-login-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #dadce0;
+        border-radius: 4px;
+        background-color: white;
+        color: #3c4043;
+        font-family: 'Roboto', sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        min-height: 40px;
+    }
+
+    .external-login-btn:hover {
+        background-color: #f8f9fa;
+        border-color: #dadce0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    }
+
+    .external-login-btn:active {
+        background-color: #f1f3f4;
+    }
+
+    .external-login-btn.google {
+        color: #3c4043;
+    }
+
+    .external-login-btn.facebook {
+        background-color: #1877f2;
+        border-color: #1877f2;
+        color: white;
+    }
+
+    .external-login-btn.facebook:hover {
+        background-color: #166fe5;
+        border-color: #166fe5;
+    }
+
+    .external-login-btn.facebook:active {
+        background-color: #1464d0;
+    }
+
+    .provider-icon {
+        width: 18px;
+        height: 18px;
+        object-fit: contain;
+    }
+
+    .provider-text {
+        font-weight: 500;
+    }
+</style>
+
+@code {
+    private AuthenticationScheme[] externalLogins = [];
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        externalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).ToArray();
+    }
+
+    private string GetProviderClass(string providerName)
+    {
+        return providerName.ToLower() switch
+        {
+            "google" => "google",
+            "facebook" => "facebook",
+            _ => ""
+        };
+    }
+
+    private string GetProviderIcon(string providerName)
+    {
+        return providerName.ToLower() switch
+        {
+            "google" =>
+            "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAxOCAxOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE3LjY0IDkuMjA0NTVDMTcuNjQgOC41NjY0IDE3LjU4MjcgNy45NTI3MyAxNy40NzY0IDcuMzYzNjRIMTlWMTBIMTcuNjRWOS4yMDQ1NVoiIGZpbGw9IiNGQjQwNDAiLz4KPHBhdGggZD0iTTkgMTguMDAwMUMxMS40MyAxOC4wMDAxIDEzLjQ2NzMgMTcuMTk0NSAxNC45NjM2IDE1Ljc4MThMMTIuNTM2NCAxMy43ODE4QzExLjg0NTUgMTQuNDQ1NSAxMC45NjM2IDE0LjgxODIgOSAxNC44MTgyQzYuNjU5MDkgMTQuODE4MiA0LjY3MjczIDEzLjM2MzYgMy45NjM2NCAxMS4zNjM2SDAuNjM2MzY0VjE0LjQ1NDVDMi4xODE4MiAxNy4wOTA5IDUuNDA5MDkgMTguMDAwMSA5IDE4LjAwMDFaIiBmaWxsPSIjMzRBODUzIi8+CjxwYXRoIGQ9Ik0zLjk2MzY0IDExLjM2MzZDMzguNzI3MyA5LjgxODE4IDMuNzI3MjcgOC4xODE4MiAzLjk2MzY0IDYuNjM2MzZIMC42MzYzNjRWMTAuMDkwOUMwLjYzNjM2NCAxMS43MjcyIDAuNjM2MzY0IDEzLjM2MzYgMy45NjM2NCAxMS4zNjM2WiIgZmlsbD0iI0ZGRDcwMCIvPgo8cGF0aCBkPSJNOSAzLjYzNjM2QzEwLjMxODIgMy42MzYzNiAxMS41MDkxIDQuMTgxODIgMTIuNDA5MSA1LjE4MTgyTDE0LjkwOTEgMi42ODE4MkMxMy40NjczIDEuMzE4MTggMTEuNDMgMC41NDU0NTUgOSAwLjU0NTQ1NUM1LjQwOTA5IDAuNTQ1NDU1IDIuMTgxODIgMS40NTQ1NSAwLjYzNjM2NCA0LjA5MDkxSDMuOTYzNjRDNC42NzI3MyAyLjA5MDkxIDYuNjU5MDkgMC42MzYzNjQgOSAwLjYzNjM2NFYzLjYzNjM2WiIgZmlsbD0iI0VCNzQzQyIvPgo8L3N2Zz4K",
+            "facebook" =>
+            "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAxOCAxOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE4IDlDMTggNC4wMzkgMTMuOTYxIDAgOSAwUzAgNC4wMzkgMCA5YzAgNC40NzEgMy4yNDMgOC4xNzQgNy40NzEgOC44ODlWMTEuNzE5SDYuMjg5VjloMS4xODJWNy4yNTVDNi4yODkgNC43MTggNy4yNzMgMy42OTkgOS42NzMgMy42OTlDMTAgMy42OTkgMTAuMjE4IDMuNzI3IDEwLjIxOCAzLjcyN1Y1LjQ1NUg5Ljk5MUM5LjcyNyA1LjQ1NSA5LjQ3MSA1LjU0NSA5LjQ3MSA2LjA5MVY5SDkuNzI3TDE4IDl6IiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K",
+            _ => ""
+        };
+    }
+}

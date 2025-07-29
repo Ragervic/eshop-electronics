@@ -1,0 +1,169 @@
+@page "/orderdetails/{Id:guid}"
+
+@using MudBlazor
+@using TestP.Models
+@using TestP.Data
+@using TestP.Services
+@using Microsoft.EntityFrameworkCore
+
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject BreadCrumbService breadCrumbService
+
+<PageTitle>Order Details</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-8">
+    <MudText Typo="Typo.h4" GutterBottom="true">Order Details</MudText>
+
+    @if (Order == null)
+    {
+        <MudAlert Severity="Severity.Info">Loading order details or order not found...</MudAlert>
+    }
+    else
+    {
+        <MudCard Outlined="true" Class="mud-elevation-2 mb-6">
+            <MudCardContent>
+                <MudText Typo="Typo.h6">Order n° @Order.Id.ToString().Substring(0, 8).ToUpper()</MudText>
+                <MudText Typo="Typo.body2">@Order.OrderItems.Count Items</MudText>
+                <MudText Typo="Typo.body2">Placed on @Order.OrderDate.ToString("dd-MM-yyyy")</MudText>
+                <MudText Typo="Typo.body2">Total: KSh @Order.TotalAmount.ToString("N0")</MudText>
+            </MudCardContent>
+        </MudCard>
+
+        <MudCard Outlined="true" Class="mud-elevation-2 mb-6">
+            <MudCardHeader>
+                <MudText Typo="Typo.h6">ITEMS IN YOUR ORDER</MudText>
+            </MudCardHeader>
+            <MudCardContent>
+                @foreach (var item in Order.OrderItems)
+                {
+                    <MudCard Outlined="true" Class="mb-3">
+                        <MudCardContent Class="d-flex align-center">
+                            <div class="mr-4">
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">ORDER PLACED</MudText>
+                                <MudText Typo="Typo.body2">Delivered between
+                                    @(Order.DeliveryDetails?.DeliveryDateStart?.ToString("dd MMMM") ?? "N/A") and
+                                    @(Order.DeliveryDetails?.DeliveryDateEnd?.ToString("dd MMMM") ?? "N/A")</MudText>
+                            </div>
+                            <MudButton OnClick="TrackItem" Variant="Variant.Filled" Color="Color.Warning" Class="ml-auto">Track
+                                My Item</MudButton>
+                        </MudCardContent>
+                        <MudCardContent Class="d-flex align-center">
+                            <div class="mr-4">
+                                <MudImage Src="@item.Product?.ImageUrl" Width="80" Height="80" Style="object-fit: contain;" />
+                            </div>
+                            <div>
+                                <MudText Typo="Typo.body1">@item.Product?.Name</MudText>
+                                <MudText Typo="Typo.body2">QTY: @item.Quantity</MudText>
+                                <MudText Typo="Typo.body1">KSh @(item.UnitPrice* item.Quantity)</MudText>
+                            </div>
+                        </MudCardContent>
+                    </MudCard>
+                }
+            </MudCardContent>
+        </MudCard>
+
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <MudCard Outlined="true" Class="mud-elevation-2 mb-6">
+                    <MudCardHeader>
+                        <MudText Typo="Typo.h6">PAYMENT INFORMATION</MudText>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        @if (Order.PaymentDetails != null)
+                        {
+                            <MudText Typo="Typo.body1">Payment Method</MudText>
+                            <MudText Typo="Typo.body2">Pay on delivery with @Order.PaymentDetails.PaymentMethodType</MudText>
+
+                            <MudText Typo="Typo.body1" Class="mt-4">Payment Details</MudText>
+                            <MudText Typo="Typo.body2">Items total: KSh @(Order.TotalAmount - Order.DeliveryFees)</MudText>
+                            <MudText Typo="Typo.body2">Delivery Fees: KSh @Order.DeliveryFees.ToString("N0")</MudText>
+                            <MudText Typo="Typo.body2">Total: KSh @Order.TotalAmount.ToString("N0")</MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2">Payment information not available.</MudText>
+                        }
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" sm="6">
+                <MudCard Outlined="true" Class="mud-elevation-2 mb-6">
+                    <MudCardHeader>
+                        <MudText Typo="Typo.h6">DELIVERY INFORMATION</MudText>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        @if (Order.DeliveryDetails != null)
+                        {
+                            <MudText Typo="Typo.body1">Delivery Method</MudText>
+                            <MudText Typo="Typo.body2">@Order.DeliveryDetails.DeliveryMethod</MudText>
+
+                            @if (Order.DeliveryDetails.DeliveryMethod == "Pickup Station")
+                            {
+                                <MudText Typo="Typo.body1" Class="mt-4">Pick-up Station Address</MudText>
+                                <MudText Typo="Typo.body2">@Order.DeliveryDetails.PickupStationName</MudText>
+                                <MudText Typo="Typo.body2">@Order.DeliveryDetails.PickupStationAddress</MudText>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.body1" Class="mt-4">Delivery Address</MudText>
+                                <MudText Typo="Typo.body2">@Order.CustomerAddress?.FullName</MudText>
+                                <MudText Typo="Typo.body2">@Order.CustomerAddress?.StreetAddress</MudText>
+                                <MudText Typo="Typo.body2">@Order.CustomerAddress?.City, @Order.CustomerAddress?.PostalCode
+                                </MudText>
+                                <MudText Typo="Typo.body2">@Order.CustomerAddress?.PhoneNumber</MudText>
+                            }
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2">Delivery information not available.</MudText>
+                        }
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; } // Order ID from the URL
+
+    private Order? Order { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        breadCrumbService.Clear();
+        breadCrumbService.AddItem("Home", "/");
+        breadCrumbService.AddItem("orders", "/user-orders");
+        breadCrumbService.AddItem($"orderdetails {Id}", $"/orderdetails/{Id}");
+
+        await LoadOrderDetails();
+    }
+
+    private async Task LoadOrderDetails()
+    {
+        using (var context = DbFactory.CreateDbContext())
+        {
+            Order = await context.Orders
+            .Include(o => o.OrderItems)
+            .ThenInclude(oi => oi.Product)
+            .FirstOrDefaultAsync(o => o.Id == Id);
+
+            if (Order == null)
+            {
+                Snackbar.Add($"Order with ID '{Id}' not found.", Severity.Error);
+                NavigationManager.NavigateTo("/orders");
+            }
+        }
+    }
+
+    private void TrackItem()
+    {
+        //Not yet to Implement tracking logic or redirect to a tracking page/external link
+        Snackbar.Add("Tracking functionality not yet implemented.", Severity.Info);
+        //NavigationManager.NavigateTo($"/trackorder/{Order.Id}");
+    }
+}

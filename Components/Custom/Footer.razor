@@ -1,0 +1,110 @@
+@using Microsoft.AspNetCore.Components;
+@using MudBlazor
+@using TestP.Models
+@using TestP.Services
+@inject ISiteSettingsService SiteSettingsService
+
+
+<MudPaper Elevation="0" Class="pa-6 mt-8 footer-background">
+    <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
+        <MudGrid Spacing="1" Justify="Justify.Center">
+            @* Company Info / Logo *@
+            <MudItem xs="12" sm="6" md="3" Class="d-flex flex-column align-center align-md-start">
+                <div class="d-flex align-center mb-4">
+                    <MudIcon Icon="@Icons.Material.Filled.ElectricalServices" Color="Color.Primary" Size="Size.Large"
+                        Class="mr-2" />
+                    <MudText Typo="Typo.h5" Class="mud-text-white">@_siteConfig?.WebsiteBanner Electronics</MudText>
+                </div>
+                <MudText Typo="Typo.body2" Class="mud-text-white-text-secondary text-center text-md-start">
+                    Your one-stop shop for the latest electronics. Quality products, unbeatable prices.
+                </MudText>
+                <div class="d-flex mt-4">
+                    <MudIconButton Href="https://facebook.com/yourecom" Target="_blank"
+                        Icon="@Icons.Custom.Brands.Facebook" Color="Color.Inherit" Class="mud-text-white" />
+                    <MudIconButton Href="https://twitter.com/yourecom" Target="_blank"
+                        Icon="@Icons.Custom.Brands.Twitter" Color="Color.Inherit" Class="mud-text-white mx-1" />
+                    <MudIconButton Href="https://instagram.com/yourecom" Target="_blank"
+                        Icon="@Icons.Custom.Brands.Instagram" Color="Color.Inherit" Class="mud-text-white" />
+                    <MudIconButton Href="https://linkedin.com/company/yourecom" Target="_blank"
+                        Icon="@Icons.Custom.Brands.LinkedIn" Color="Color.Inherit" Class="mud-text-white ml-1" />
+                </div>
+            </MudItem>
+
+            @* Quick Links *@
+            <MudItem xs="12" sm="6" md="2" Class="text-center text-md-start">
+                <MudText Typo="Typo.h6" Class="mb-3 mud-text-white font-weight-bold">Quick Links</MudText>
+                <MudList T="string" DisablePadding="true">
+                    <MudListItem Href="/" Class="mud-text-white-text-secondary">Home</MudListItem>
+                    <MudListItem Href="/about" Class="mud-text-white-text-secondary">About Us</MudListItem>
+                    <MudListItem Href="/contact" Class="mud-text-white-text-secondary">Contact</MudListItem>
+                </MudList>
+            </MudItem>
+
+            @* Customer Service *@
+            <MudItem xs="12" sm="6" md="2" Class="text-center text-md-start">
+                <MudText Typo="Typo.h6" Class="mb-3 mud-text-white font-weight-bold">Customer Service</MudText>
+                <MudList T="string" DisablePadding="true">
+                    <MudListItem Href="/faq" Class="mud-text-white-text-secondary">FAQ</MudListItem>
+                    <MudListItem Href="/shipping-delivery" Class="mud-text-white-text-secondary">Shipping & Delivery
+                    </MudListItem>
+                    <MudListItem Href="/returns-refunds" Class="mud-text-white-text-secondary">Returns & Refunds
+                    </MudListItem>
+                    <MudListItem Href="/privacy" Class="mud-text-white-text-secondary">Privacy Policy
+                    </MudListItem>
+                    <MudListItem Href="/terms" Class="mud-text-white-text-secondary">Terms & Conditions
+                    </MudListItem>
+                </MudList>
+            </MudItem>
+
+            @* Contact Info *@
+            <MudItem xs="12" sm="6" md="3" Class="text-center text-md-start">
+                <MudText Typo="Typo.h6" Class="mb-3 mud-text-white font-weight-bold">Contact Us</MudText>
+                <MudList T="string" DisablePadding="true">
+                    <MudListItem Icon="@Icons.Material.Filled.LocationOn" IconColor="Color.Primary"
+                        Class="mud-text-white-text-secondary">@_siteConfig?.CompanyAddress</MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.Phone" IconColor="Color.Primary"
+                        Class="mud-text-white-text-secondary">
+                        @_siteConfig?.ContactPhone
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.Email" IconColor="Color.Primary"
+                        Class="mud-text-white-text-secondary">
+                        @_siteConfig?.ContactEmail
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.WatchLater" IconColor="Color.Primary"
+                        Class="mud-text-white-text-secondary">
+                        Mon-Fri: 9 AM - 6 PM
+                    </MudListItem>
+                </MudList>
+            </MudItem>
+        </MudGrid>
+
+        <MudDivider Class="my-6 mud-border-white-text-secondary" />
+
+        @* Payment Methods & Copyright *@
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-center">
+            <MudText Typo="Typo.body2" Class="mud-text-white-text-secondary text-center text-sm-start mb-2 mb-sm-0">
+                &copy; @DateTime.Now.Year @_siteConfig?.WebsiteBanner Electronics. All rights reserved.
+            </MudText>
+            <div class="d-flex gap-2">
+                <MudImage Src="https://img.icons8.com/color/48/000000/visa.png" Alt="Visa" Width="60" Height="25"
+                    Style="object-fit:contain;" />
+                <MudImage Src="https://img.icons8.com/color/48/000000/mastercard.png" Alt="Mastercard" Width="40"
+                    Height="25" Style="object-fit:contain;" />
+                <MudImage Src="https://img.icons8.com/color/48/000000/paypal.png" Alt="PayPal" Width="40" Height="25"
+                    Style="object-fit:contain;" />
+                <MudImage Src="https://img.icons8.com/?size=100&id=kUwZnzomzbTj&format=png&color=000000" Alt="Mpesa"
+                    Width="40" Height="25" Style="object-fit:contain;" />
+                <MudImage Src="https://img.icons8.com/color/48/000000/google-pay.png" Alt="Google Pay" Width="40"
+                    Height="25" Style="object-fit:contain;" />
+            </div>
+        </div>
+    </MudContainer>
+</MudPaper>
+@code {
+    private SiteConfiguration? _siteConfig;
+    protected override async Task OnInitializedAsync()
+    {
+        _siteConfig = await SiteSettingsService.GetSiteSettingsAsync();
+    }
+
+}

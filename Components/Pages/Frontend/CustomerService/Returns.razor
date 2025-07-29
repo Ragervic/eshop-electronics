@@ -1,0 +1,195 @@
+@page "/returns-refunds"
+
+@using MudBlazor
+
+<PageTitle>Returns & Refunds - eShop</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-8">
+    <MudGrid Justify="Justify.Center" Spacing="4">
+
+        @* Page Header *@
+        <MudItem xs="12" Class="text-center">
+            <MudText Typo="Typo.h3" Color="Color.Dark" Class="mb-4">Returns & Refunds Policy</MudText>
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="mud-text-secondary mb-6">
+                Your guide to hassle-free returns and timely refunds.
+            </MudText>
+            <MudDivider Class="my-8" />
+        </MudItem>
+
+        @* General Policy Overview *@
+        <MudItem xs="12">
+            <MudPaper Elevation="1" Class="pa-6 rounded-lg">
+                <MudText Typo="Typo.h6" Class="mb-3">Our Commitment to Your Satisfaction</MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary mb-4">
+                    At eShop, your satisfaction is our priority. If you're not entirely happy with your purchase, we're
+                    here to help. Our policy lasts 30 days. If 30 days have gone by since your purchase, unfortunately,
+                    we can’t offer you a refund or exchange.
+                </MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                    To be eligible for a return, your item must be unused and in the same condition that you received
+                    it. It must also be in the original packaging.
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        @* How to Initiate a Return *@
+        <MudItem xs="12">
+            <MudPaper Elevation="1" Class="pa-6 rounded-lg mt-6">
+                <MudText Typo="Typo.h6" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.AssignmentReturn" Class="mr-2" />How to Initiate a Return
+                </MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary mb-4">
+                    To start a return, please log into your account and navigate to your order history. Select the order
+                    containing the item(s) you wish to return and follow the instructions to request a Return
+                    Merchandise Authorization (RMA) number. Alternatively, you can contact our customer support team
+                    directly.
+                </MudText>
+                <MudButton Href="/contact" Variant="Variant.Outlined" Color="Color.Primary"
+                    EndIcon="@Icons.Material.Filled.ContactSupport">
+                    Contact Support for Returns
+                </MudButton>
+            </MudPaper>
+        </MudItem>
+
+        @* Return Cycle (Based on your image) *@
+        <MudItem xs="12">
+            <MudPaper Elevation="2" Class="pa-6 rounded-lg mt-6 text-center">
+                <MudText Typo="Typo.h5" Color="Color.Tertiary" Class="mb-4">Our Return Cycle Explained</MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary mb-6">
+                    Here's a step-by-step breakdown of what happens once you decide to return an item:
+                </MudText>
+
+                <MudGrid Spacing="4" Justify="Justify.Center">
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudPaper Elevation="0" Class="pa-4">
+                            <MudIcon Icon="@Icons.Material.Filled.EventAvailable" Size="Size.Large"
+                                Color="Color.Secondary" Class="mb-2" />
+                            <MudText Typo="Typo.h6">Step 1: Drop-off Window</MudText>
+                            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                                You have **3 days to drop off your return** at our designated collection points after
+                                initiating the return request.
+                            </MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudPaper Elevation="0" Class="pa-4">
+                            <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Size="Size.Large"
+                                Color="Color.Secondary" Class="mb-2" />
+                            <MudText Typo="Typo.h6">Step 2: Item Transit</MudText>
+                            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                                The item will reverse to our Quality Check team in Nairobi **within 3-8 business days**.
+                            </MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudPaper Elevation="0" Class="pa-4">
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Large" Color="Color.Secondary"
+                                Class="mb-2" />
+                            <MudText Typo="Typo.h6">Step 3: Quality Check</MudText>
+                            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                                A thorough quality check will be performed **within 1 business day** upon receipt of the
+                                item.
+                            </MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudPaper Elevation="0" Class="pa-4">
+                            <MudIcon Icon="@Icons.Material.Filled.Payments" Size="Size.Large" Color="Color.Secondary"
+                                Class="mb-2" />
+                            <MudText Typo="Typo.h6">Step 4: Refund Execution</MudText>
+                            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                                Upon successful quality check, your refund will be processed according to our <MudLink
+                                    Href="#refund-execution-timeframes">Refund Execution Time Frames</MudLink> below.
+                            </MudText>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+        </MudItem>
+
+        @* Refund Execution Time Frames *@
+        <MudItem xs="12">
+            <MudPaper Elevation="1" Class="pa-6 rounded-lg mt-6" Id="refund-execution-timeframes">
+                <MudText Typo="Typo.h6" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Receipt" Class="mr-2" />Refund Execution Time Frames
+                </MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary mb-4">
+                    Once your return has passed the quality check, the refund process will be initiated. The time it
+                    takes for the refund to reflect in your account depends on your payment method:
+                </MudText>
+                <MudList T="string" Class="mud-text-secondary">
+                    <MudListItem Icon="@Icons.Material.Filled.CreditCard">
+                        <MudText Typo="Typo.body1">
+                            **Credit/Debit Card:** Refunds typically appear on your statement within 5-10 business days.
+                        </MudText>
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.AccountBalanceWallet">
+                        <MudText Typo="Typo.body1">
+                            **Mobile Money (e.g., M-Pesa):** Refunds are usually processed within 1-3 business days.
+                        </MudText>
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.AccountBalance">
+                        <MudText Typo="Typo.body1">
+                            **Bank Transfer:** Allow 3-7 business days for the funds to appear in your bank account.
+                        </MudText>
+                    </MudListItem>
+                </MudList>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary mt-4">
+                    You will receive an email notification once your refund has been processed.
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        @* Non-Returnable Items *@
+        <MudItem xs="12">
+            <MudPaper Elevation="1" Class="pa-6 rounded-lg mt-6">
+                <MudText Typo="Typo.h6" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Cancel" Class="mr-2" />Non-Returnable Items
+                </MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary mb-4">
+                    Certain types of items cannot be returned, including:
+                </MudText>
+                <MudList T="string" Class="mud-text-secondary">
+                    <MudListItem Icon="@Icons.Material.Filled.Close" IconColor="Color.Error">Gift cards</MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.Close" IconColor="Color.Error">Downloadable software
+                        products</MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.Close" IconColor="Color.Error">Some health and personal
+                        care items</MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.Close" IconColor="Color.Error">Items that are not in their
+                        original condition, are damaged or missing parts for reasons not due to our error.</MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.Close" IconColor="Color.Error">Any item that is returned
+                        more than 30 days after delivery.</MudListItem>
+                </MudList>
+            </MudPaper>
+        </MudItem>
+
+        @* Damaged or Defective Items *@
+        <MudItem xs="12">
+            <MudPaper Elevation="1" Class="pa-6 rounded-lg mt-6">
+                <MudText Typo="Typo.h6" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.BrokenImage" Class="mr-2" />Damaged or Defective Items
+                </MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                    If you receive a damaged or defective item, please contact us immediately upon receipt. We will
+                    arrange for a replacement or a full refund, and cover any associated shipping costs. Please provide
+                    photos of the damage to expedite the process.
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        @* Final Call to Action / Contact *@
+        <MudItem xs="12" Class="text-center mt-8">
+            <MudText Typo="Typo.h5" Class="mb-4">Questions about your return?</MudText>
+            <MudButton Href="/contact" Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Large"
+                EndIcon="@Icons.Material.Filled.HelpOutline">
+                Contact Our Support Team
+            </MudButton>
+        </MudItem>
+
+    </MudGrid>
+</MudContainer>
+
+@code {
+    // No specific C# logic needed for this static content page,
+    // but the @code block is kept if you later need to pull dynamic content (e.g., from a database).
+}

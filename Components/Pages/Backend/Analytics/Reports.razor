@@ -1,0 +1,402 @@
+@page "/reports"
+
+@using TestP.Components.Layout
+@layout AdminLayout
+
+@using Microsoft.EntityFrameworkCore
+@using MudBlazor
+@using TestP.Models
+@using TestP.Data
+@using TestP.Services
+@using Microsoft.JSInterop
+@using System.Text
+@using System.Linq
+
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject IJSRuntime JSRuntime
+@inject ISnackbar Snackbar
+
+             <MudPaper Elevation="2" Style="background-color:	#c9dcff; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  top: 0;z-index: 1000;">
+                <MudText Typo="Typo.h4" Class="mb-8 mt-4 text-bold" GutterBottom="true" Color="Color.Primary">Reports</MudText>
+        </MudPaper>
+
+
+<MudGrid Spacing="6">
+    <MudItem xs="12" md="6">
+        <MudCard Outlined="true">
+            <MudCardHeader>
+                <MudText Typo="Typo.h6">Sales Report</MudText>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudDatePicker Label="Start Date" @bind-Date="SalesReportStartDate" DateFormat="dd MMM yyyy" AdornmentIcon="@Icons.Material.Filled.DateRange" Clearable="true" />
+                <MudDatePicker Label="End Date" @bind-Date="SalesReportEndDate" DateFormat="dd MMM yyyy" AdornmentIcon="@Icons.Material.Filled.DateRange" Clearable="true" />
+            </MudCardContent>
+            <MudCardActions Class="pa-4">
+                <MudButton OnClick="DownloadSalesReport" Variant="Variant.Filled" Color="Color.Primary" EndIcon="@Icons.Material.Filled.Download" Disabled="_isDownloadingSalesReport" FullWidth="true">
+                    @if (_isDownloadingSalesReport)
+                    {
+                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                        <MudText Class="ml-2">Generating...</MudText>
+                    }
+                    else
+                    {
+                        <MudText>Download Sales Report (CSV)</MudText>
+                    }
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" md="6">
+        <MudCard Outlined="true">
+            <MudCardHeader>
+                <MudText Typo="Typo.h6">Orders Report</MudText>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudDatePicker Label="Start Date" @bind-Date="OrdersReportStartDate" DateFormat="dd MMM yyyy" AdornmentIcon="@Icons.Material.Filled.DateRange" Clearable="true" />
+                <MudDatePicker Label="End Date" @bind-Date="OrdersReportEndDate" DateFormat="dd MMM yyyy" AdornmentIcon="@Icons.Material.Filled.DateRange" Clearable="true" />
+            </MudCardContent>
+            <MudCardActions Class="pa-4">
+                <MudButton OnClick="DownloadOrdersReport" Variant="Variant.Filled" Color="Color.Secondary" EndIcon="@Icons.Material.Filled.Download" Disabled="_isDownloadingOrdersReport" FullWidth="true">
+                    @if (_isDownloadingOrdersReport)
+                    {
+                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                        <MudText Class="ml-2">Generating...</MudText>
+                    }
+                    else
+                    {
+                        <MudText>Download Orders Report (CSV)</MudText>
+                    }
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" md="6">
+        <MudCard Outlined="true">
+            <MudCardHeader>
+                <MudText Typo="Typo.h6">Products Report</MudText>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudSelect T="string" Label="Category Filter" @bind-Value="SelectedCategory" Variant="Variant.Filled" AdornmentIcon="@Icons.Material.Filled.Category" Clearable="true">
+                    <MudSelectItem Value="@string.Empty">All Categories</MudSelectItem>
+                    @if (_categories != null)
+                    {
+                        @foreach (var category in _categories)
+                        {
+                            <MudSelectItem Value="@category.Name">@category.Name</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudCardContent>
+            <MudCardActions Class="pa-4">
+                <MudButton OnClick="DownloadProductsReport" Variant="Variant.Filled" Color="Color.Info" EndIcon="@Icons.Material.Filled.Download" Disabled="_isDownloadingProductsReport" FullWidth="true">
+                    @if (_isDownloadingProductsReport)
+                    {
+                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                        <MudText Class="ml-2">Generating...</MudText>
+                    }
+                    else
+                    {
+                        <MudText>Download Products Report (CSV)</MudText>
+                    }
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" md="6">
+        <MudCard Outlined="true">
+            <MudCardHeader>
+                <MudText Typo="Typo.h6">Users Report</MudText>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudText Typo="Typo.body2" Class="mb-3">Generate a report showing user order statistics</MudText>
+            </MudCardContent>
+            <MudCardActions Class="pa-4">
+                <MudButton OnClick="DownloadUsersReport" Variant="Variant.Filled" Color="Color.Warning" EndIcon="@Icons.Material.Filled.Download" Disabled="_isDownloadingUsersReport" FullWidth="true">
+                    @if (_isDownloadingUsersReport)
+                    {
+                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                        <MudText Class="ml-2">Generating...</MudText>
+                    }
+                    else
+                    {
+                        <MudText>Download Users Report (CSV)</MudText>
+                    }
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private DateTime? SalesReportStartDate { get; set; } = DateTime.Today.AddMonths(-1);
+    private DateTime? SalesReportEndDate { get; set; } = DateTime.Today;
+    private DateTime? OrdersReportStartDate { get; set; } = DateTime.Today.AddMonths(-1);
+    private DateTime? OrdersReportEndDate { get; set; } = DateTime.Today;
+    private bool _isDownloadingSalesReport = false;
+    private bool _isDownloadingOrdersReport = false;
+    private bool _isDownloadingProductsReport = false;
+    private bool _isDownloadingUsersReport = false; // Added for Users Report
+    private string? SelectedCategory { get; set; } = string.Empty;
+    private List<Category>? _categories;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategories();
+        await base.OnInitializedAsync();
+    }
+
+    private async Task LoadCategories()
+    {
+        try
+        {
+            using (var context = await DbFactory.CreateDbContextAsync())
+            {
+                _categories = await context.Categories.OrderBy(c => c.Name).ToListAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading categories: {ex}");
+            Snackbar.Add("Error loading categories", Severity.Warning);
+        }
+    }
+
+    private async Task DownloadSalesReport()
+    {
+        _isDownloadingSalesReport = true;
+        try
+        {
+            if (SalesReportStartDate == null || SalesReportEndDate == null)
+            {
+                Snackbar.Add("Please select both start and end dates for the Sales Report.", Severity.Warning);
+                return;
+            }
+
+            var startDate = SalesReportStartDate.Value.Date;
+            var endDate = SalesReportEndDate.Value.Date.AddDays(1).AddTicks(-1);
+
+            using (var context = await DbFactory.CreateDbContextAsync())
+            {
+                var salesData = await context.Orders
+                    .Where(o => o.OrderDate >= startDate && o.OrderDate <= endDate)
+                    .GroupBy(o => 1)
+                    .Select(g => new
+                    {
+                        TotalRevenue = g.Sum(o => o.TotalAmount),
+                        TotalOrders = g.Count()
+                    })
+                    .FirstOrDefaultAsync();
+
+                var csvContent = new StringBuilder();
+                csvContent.AppendLine("Report Period,Total Revenue (KES),Total Orders");
+                if (salesData != null)
+                {
+                    csvContent.AppendLine($"\"{SalesReportStartDate.Value.ToString("yyyy-MM-dd")} to {SalesReportEndDate.Value.ToString("yyyy-MM-dd")}\",\"{salesData.TotalRevenue:N2}\",\"{salesData.TotalOrders}\"");
+                }
+                else
+                {
+                    csvContent.AppendLine("No sales data found for the selected period.");
+                }
+
+                await DownloadFile("SalesReport.csv", "text/csv", Encoding.UTF8.GetBytes(csvContent.ToString()));
+                Snackbar.Add("Sales Report generated successfully!", Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating Sales Report: {ex.Message}", Severity.Error);
+            Console.WriteLine($"Error generating Sales Report: {ex}");
+        }
+        finally
+        {
+            _isDownloadingSalesReport = false;
+        }
+    }
+
+    private async Task DownloadOrdersReport()
+    {
+        _isDownloadingOrdersReport = true;
+        try
+        {
+            if (OrdersReportStartDate == null || OrdersReportEndDate == null)
+            {
+                Snackbar.Add("Please select both start and end dates for the Orders Report.", Severity.Warning);
+                return;
+            }
+
+            var startDate = OrdersReportStartDate.Value.Date;
+            var endDate = OrdersReportEndDate.Value.Date.AddDays(1).AddTicks(-1);
+
+            using (var context = await DbFactory.CreateDbContextAsync())
+            {
+                var ordersData = await context.Orders
+                    .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                    .Where(o => o.OrderDate >= startDate && o.OrderDate <= endDate)
+                    .OrderByDescending(o => o.OrderDate)
+                    .ToListAsync();
+
+                var csvContent = new StringBuilder();
+                csvContent.AppendLine("Order ID,Order Date,Customer Name,Total Amount,Status,Items Count");
+                
+                foreach (var order in ordersData)
+                {
+                    var customerName = order.CustomerAddress?.FullName ?? "Unknown Customer";
+                    
+                    csvContent.AppendLine($"\"{order.Id}\",\"{order.OrderDate:yyyy-MM-dd HH:mm}\",\"{customerName}\",\"{order.TotalAmount:N2}\",\"{order.Status}\",{order.OrderItems?.Count ?? 0}");
+                }
+
+                if (!ordersData.Any())
+                {
+                    csvContent.AppendLine("No orders found for the selected period.");
+                }
+
+                await DownloadFile("OrdersReport.csv", "text/csv", Encoding.UTF8.GetBytes(csvContent.ToString()));
+                Snackbar.Add("Orders Report generated successfully!", Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating Orders Report: {ex.Message}", Severity.Error);
+            Console.WriteLine($"Error generating Orders Report: {ex}");
+        }
+        finally
+        {
+            _isDownloadingOrdersReport = false;
+        }
+    }
+
+    private async Task DownloadProductsReport()
+    {
+        _isDownloadingProductsReport = true;
+        try
+        {
+            using (var context = await DbFactory.CreateDbContextAsync())
+            {
+                var query = context.Products
+                    .Include(p => p.Category)
+                    .AsQueryable();
+
+                // Apply category filter if selected
+                if (!string.IsNullOrEmpty(SelectedCategory))
+                {
+                    query = query.Where(p => p.Category != null && p.Category.Name == SelectedCategory);
+                }
+
+                var productsData = await query
+                    .OrderBy(p => p.Category != null ? p.Category.Name : "Uncategorized")
+                    .ThenBy(p => p.Name)
+                    .ToListAsync();
+
+                // Get total stock ever recorded for each product from order items
+                var productIds = productsData.Select(p => p.Id).ToList();
+                var totalStockData = await context.OrderItems
+                    .Where(oi => oi.ProductId.HasValue && productIds.Contains(oi.ProductId.Value))
+                    .GroupBy(oi => oi.ProductId!.Value)
+                    .Select(g => new { ProductId = g.Key, TotalStockEver = g.Sum(oi => oi.Quantity) })
+                    .ToDictionaryAsync(x => x.ProductId, x => x.TotalStockEver);
+
+                var csvContent = new StringBuilder();
+                csvContent.AppendLine("Product ID,Product Name,Category,Brand,Price (KES),Current Stock,Total Stock Ever Sold,Description");
+                
+                foreach (var product in productsData)
+                {
+                    var description = product.Description?.Replace("\"", "\"\"") ?? ""; // Escape quotes in description
+                    var categoryName = product.Category?.Name ?? "Uncategorized";
+                    var totalStockEver = totalStockData.TryGetValue(product.Id, out var total) ? total : 0;
+                    csvContent.AppendLine($"\"{product.Id}\",\"{product.Name}\",\"{categoryName}\",\"{product.Brand ?? ""}\",\"{product.Price:N2}\",\"{product.StockQuantity}\",\"{totalStockEver}\",\"{description}\"");
+                }
+
+                if (!productsData.Any())
+                {
+                    csvContent.AppendLine("No products found.");
+                }
+
+                var fileName = string.IsNullOrEmpty(SelectedCategory) ? "ProductsReport.csv" : $"ProductsReport_{SelectedCategory.Replace(" ", "_")}.csv";
+                await DownloadFile(fileName, "text/csv", Encoding.UTF8.GetBytes(csvContent.ToString()));
+                Snackbar.Add("Products Report generated successfully!", Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating Products Report: {ex.Message}", Severity.Error);
+            Console.WriteLine($"Error generating Products Report: {ex}");
+        }
+        finally
+        {
+            _isDownloadingProductsReport = false;
+        }
+    }
+
+    private async Task DownloadUsersReport()
+    {
+        _isDownloadingUsersReport = true;
+        try
+        {
+            using (var context = await DbFactory.CreateDbContextAsync())
+            {
+                // Get all registered users with their order statistics (including users with no orders)
+                var usersData = await context.Users
+                    .GroupJoin(
+                        context.Orders.Where(o => o.CustomerAddress != null && !string.IsNullOrEmpty(o.CustomerAddress.FullName)),
+                        user => user.UserName,
+                        order => order.CustomerAddress.FullName,
+                        (user, orders) => new { User = user, Orders = orders }
+                    )
+                    .SelectMany(
+                        x => x.Orders.DefaultIfEmpty(),
+                        (x, order) => new { x.User, Order = order }
+                    )
+                    .GroupBy(x => x.User)
+                    .Select(g => new
+                    {
+                        UserName = g.Key.UserName ?? g.Key.Email ?? "Unknown",
+                        Email = g.Key.Email ?? "No Email",
+                        TotalOrders = g.Count(x => x.Order != null),
+                        TotalAmount = g.Where(x => x.Order != null).Sum(x => x.Order!.TotalAmount),
+                        FirstOrderDate = g.Where(x => x.Order != null).Min(x => x.Order!.OrderDate) as DateTime?,
+                        LastOrderDate = g.Where(x => x.Order != null).Max(x => x.Order!.OrderDate) as DateTime?
+                    })
+                    .OrderByDescending(u => u.TotalOrders)
+                    .ThenBy(u => u.UserName)
+                    .ToListAsync();
+
+                var csvContent = new StringBuilder();
+                csvContent.AppendLine("Username,Email,Total Orders,Total Amount (KES),First Order Date,Last Order Date");
+                
+                foreach (var user in usersData)
+                {
+                    var firstOrderDate = user.FirstOrderDate.HasValue ? user.FirstOrderDate.Value.ToString("yyyy-MM-dd") : "No Orders";
+                    var lastOrderDate = user.LastOrderDate.HasValue ? user.LastOrderDate.Value.ToString("yyyy-MM-dd") : "No Orders";
+                    
+                    csvContent.AppendLine($"\"{user.UserName}\",\"{user.Email}\",\"{user.TotalOrders}\",\"{user.TotalAmount:N2}\",\"{firstOrderDate}\",\"{lastOrderDate}\"");
+                }
+
+                if (!usersData.Any())
+                {
+                    csvContent.AppendLine("No users found.");
+                }
+
+                await DownloadFile("UsersReport.csv", "text/csv", Encoding.UTF8.GetBytes(csvContent.ToString()));
+                Snackbar.Add("Users Report generated successfully!", Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating Users Report: {ex.Message}", Severity.Error);
+            Console.WriteLine($"Error generating Users Report: {ex}");
+        }
+        finally
+        {
+            _isDownloadingUsersReport = false;
+        }
+    }
+
+    private async Task DownloadFile(string fileName, string contentType, byte[] fileContent)
+    {
+        await JSRuntime.InvokeVoidAsync("BlazorDownloadFile", fileName, contentType, fileContent);
+    }
+} 

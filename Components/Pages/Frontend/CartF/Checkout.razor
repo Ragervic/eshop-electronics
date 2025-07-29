@@ -1,0 +1,553 @@
+@page "/checkout"
+
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using TestP.Models
+@using TestP.Data
+@using TestP.Services
+@using MudBlazor
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Authorization
+@using static TestP.Models.OrderEntities
+
+
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject CartService CartService
+@inject BreadCrumbService breadCrumbService
+
+<PageTitle>Checkout</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-8">
+            <MudGrid Justify="Justify.Center">
+                <MudItem xs="12" md="8">
+                    <MudText Typo="Typo.h4" Class="mb-4">Checkout</MudText>
+
+                    <MudCard Outlined="true" Class="mb-4">
+                        <MudCardHeader>
+                            <MudText Typo="Typo.h6">1. Customer Address</MudText>
+                            <MudButton OnClick="ToggleAddressEdit" Size="Size.Small" Color="Color.Warning"
+                                Class="ml-auto">
+                                @(_editingAddress ? "Save" : "Change")
+                            </MudButton>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            @if (_editingAddress)
+                            {
+                                <EditForm Context="customerAddressEditContext" Model="@_customerAddress"
+                                    OnValidSubmit="SaveAddress">
+                                    <DataAnnotationsValidator />
+                                    <MudGrid>
+                                        <MudItem xs="12">
+                                            <MudTextField @bind-Value="_customerAddress.FullName" Label="Full Name"
+                                                Required="true" />
+                                        </MudItem>
+                                        <MudItem xs="12" sm="6">
+                                            <MudTextField @bind-Value="_customerAddress.PhoneNumber" Label="Phone Number"
+                                                Required="true" />
+                                        </MudItem>
+                                        <MudItem xs="12" sm="6">
+                                            <MudTextField @bind-Value="_customerAddress.Email" Label="Email"
+                                                InputType="InputType.Email" Required="true" />
+                                        </MudItem>
+                                        <MudItem xs="12">
+                                            <MudTextField @bind-Value="_customerAddress.StreetAddress"
+                                                Label="Street Address" Required="true" />
+                                        </MudItem>
+                                        <MudItem xs="12" sm="6">
+                                            <MudTextField @bind-Value="_customerAddress.City" Label="City"
+                                                Required="true" />
+                                        </MudItem>
+                                        <MudItem xs="12" sm="6">
+                                            <MudTextField @bind-Value="_customerAddress.PostalCode" Label="Postal Code"
+                                                Required="true" />
+                                        </MudItem>
+                                    </MudGrid>
+                                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success"
+                                        Class="mt-4">Save Address</MudButton>
+                                </EditForm>
+                            }
+                            else if (_customerAddress != null && !string.IsNullOrWhiteSpace(_customerAddress.FullName))
+                            {
+                                <MudText Typo="Typo.body1">@_customerAddress.FullName</MudText>
+                                <MudText Typo="Typo.body2">@_customerAddress.StreetAddress, @_customerAddress.City -
+                                    @_customerAddress.PostalCode | @_customerAddress.PhoneNumber</MudText>
+                                <MudText Typo="Typo.body2">@_customerAddress.Email</MudText>
+                            }
+                            else
+                            {
+                                <MudAlert Severity="Severity.Info">No address available. Please add one.</MudAlert>
+                                <MudButton OnClick="ToggleAddressEdit" Size="Size.Small" Color="Color.Warning" Class="mt-2">
+                                    Add Address</MudButton>
+                            }
+                        </MudCardContent>
+                    </MudCard>
+
+                    <MudCard Outlined="true" Class="mb-4">
+                        <MudCardHeader>
+                            <MudText Typo="Typo.h6">2. Delivery Details</MudText>
+                            <MudButton OnClick="ToggleDeliveryEdit" Size="Size.Small" Color="Color.Warning"
+                                Class="ml-auto">
+                                @(_editingDelivery ? "Save" : "Change")
+                            </MudButton>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            @if (_editingDelivery)
+                            {
+                                <EditForm Context="deliveryDetailsEditContext" Model="@_deliveryDetails"
+                                    OnValidSubmit="SaveDeliveryDetails">
+                                    <DataAnnotationsValidator />
+                                    <MudRadioGroup T="string" @bind-Value="_deliveryDetails.DeliveryMethod">
+                                        <MudRadio Value="@("Pickup Station")" Color="Color.Info">Pick-up Station</MudRadio>
+                                        <MudRadio Value="@("Home Delivery")" Color="Color.Info">Home Delivery</MudRadio>
+                                    </MudRadioGroup>
+                                    @if (_deliveryDetails.DeliveryMethod == "Pickup Station")
+                                    {
+                                        <MudTextField @bind-Value="_deliveryDetails.PickupStationName"
+                                            Label="Pickup Station Name" Required="true" />
+                                        <MudTextField @bind-Value="_deliveryDetails.PickupStationAddress"
+                                            Label="Pickup Station Address" Required="true" Class="mt-2" />
+                                    }
+                                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Warning"
+                                        Class="mt-4">Save Delivery</MudButton>
+                                </EditForm>
+                            }
+                            else if (_deliveryDetails != null &&
+                            !string.IsNullOrWhiteSpace(_deliveryDetails.DeliveryMethod))
+                            {
+                                <MudText Typo="Typo.body1">Delivery between
+                                    @_deliveryDetails.DeliveryDateStart?.ToString("dd MMMM") and
+                                    @_deliveryDetails.DeliveryDateEnd?.ToString("dd MMMM")</MudText>
+                                @if (_deliveryDetails.DeliveryMethod == "Pickup Station")
+                                {
+                                    <MudText Typo="Typo.body2">**Pick-up Station:** @_deliveryDetails.PickupStationName
+                                    </MudText>
+                                    <MudText Typo="Typo.body2">@_deliveryDetails.PickupStationAddress</MudText>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.body2">**Home Delivery:** To your customer address</MudText>
+                                }
+
+                                <MudDivider Class="my-4" />
+
+                                @foreach (var item in _cartItems)
+                                {
+                                    <MudGrid Class="my-2">
+                                        <MudItem xs="2">
+                                            <MudImage Src="@item.ProductImageUrl" Width="50" Height="50"
+                                                Style="object-fit: contain;" />
+                                        </MudItem>
+                                        <MudItem xs="8">
+                                            <MudText Typo="Typo.body1">@item.ProductName</MudText>
+                                            <MudText Typo="Typo.body2">QTY: @item.Quantity</MudText>
+                                        </MudItem>
+                                        <MudItem xs="2" Class="d-flex align-center justify-end">
+                                            <MudText Typo="Typo.body1">KSh @(item.UnitPrice* item.Quantity)
+                                            </MudText>
+                                        </MudItem>
+                                    </MudGrid>
+                                }
+                                <MudButton OnClick="ModifyCart" Size="Size.Small" Color="Color.Secondary" Class="mt-4">
+                                    Modify cart</MudButton>
+                            }
+                            else
+                            {
+                                <MudAlert Severity="Severity.Info">No delivery details available. Please specify.</MudAlert>
+                                <MudButton OnClick="ToggleDeliveryEdit" Size="Size.Small" Color="Color.Warning"
+                                    Class="mt-2">Add Delivery Details</MudButton>
+                            }
+                        </MudCardContent>
+                    </MudCard>
+
+                    <MudCard Outlined="true" Class="mb-4">
+                        <MudCardHeader>
+                            <MudText Typo="Typo.h6">3. Payment Method</MudText>
+                            <MudButton OnClick="TogglePaymentEdit" Size="Size.Small" Color="Color.Warning"
+                                Class="ml-auto">
+                                @(_editingPayment ? "Save" : "Change")
+                            </MudButton>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            @if (_editingPayment)
+                            {
+                                <EditForm Context="paymentEditContext" Model="@_paymentDetails"
+                                    OnValidSubmit="SavePaymentMethod">
+                                    <DataAnnotationsValidator />
+                                    <MudRadioGroup T="string" @bind-Value="_paymentDetails.PaymentMethodType">
+                                        <MudRadio Value="@("Mobile Money")" Color="Color.Info">Pay on delivery with Mobile
+                                            Money</MudRadio>
+                                        <MudRadio Value="@("Bank Cards")" Color="Color.Info">Pay on delivery with Bank Cards
+                                        </MudRadio>
+                                        <MudRadio Value="@("Credit/Debit Card")" Color="Color.Info">Credit/Debit Card
+                                            (Online)</MudRadio>
+                                    </MudRadioGroup>
+                                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Warning"
+                                        Class="mt-4">Save Payment</MudButton>
+                                </EditForm>
+                            }
+                            else if (_paymentDetails != null &&
+                            !string.IsNullOrWhiteSpace(_paymentDetails.PaymentMethodType))
+                            {
+                                <MudText Typo="Typo.body1">Pay on delivery with @_paymentDetails.PaymentMethodType</MudText>
+                            }
+                            else
+                            {
+                                <MudAlert Severity="Severity.Info">No payment method selected. Please choose one.</MudAlert>
+                                <MudButton OnClick="TogglePaymentEdit" Size="Size.Small" Color="Color.Warning" Class="mt-2">
+                                    Select Payment Method</MudButton>
+                            }
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudCard Outlined="true">
+                        <MudCardHeader>
+                            <MudText Typo="Typo.h6">Order summary</MudText>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudGrid Justify="Justify.SpaceBetween">
+                                <MudItem xs="6">
+                                    <MudText Typo="Typo.body1">Item's total (@_cartItems.Count)</MudText>
+                                </MudItem>
+                                <MudItem xs="6" Class="d-flex justify-end">
+                                    <MudText Typo="Typo.body1">KSh @_itemsTotal.ToString("N0")</MudText>
+                                </MudItem>
+
+                                <MudItem xs="6">
+                                    <MudText Typo="Typo.body1">Delivery fees</MudText>
+                                </MudItem>
+                                <MudItem xs="6" Class="d-flex justify-end">
+                                    <MudText Typo="Typo.body1">KSh @_deliveryFees.ToString("N0")</MudText>
+                                </MudItem>
+
+                                <MudItem xs="12">
+                                    <MudDivider />
+                                </MudItem>
+
+                                <MudItem xs="6">
+                                    <MudText Typo="Typo.h6">Total</MudText>
+                                </MudItem>
+                                <MudItem xs="6" Class="d-flex justify-end">
+                                    <MudText Typo="Typo.h6">KSh @_overallTotal.ToString("N0")</MudText>
+                                </MudItem>
+                            </MudGrid>
+                            @* Example: ReadOnly for promo code input *@
+                            <MudTextField T="string" Label="Enter code here" Class="mt-4" ReadOnly="true" />
+                            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" FullWidth="true" Class="mt-2"
+                                Disabled="true">APPLY</MudButton>
+
+                            <MudButton OnClick="ConfirmOrder" Variant="Variant.Filled" Color="Color.Success"
+                                FullWidth="true" Class="mt-4">Confirm order</MudButton>
+                            <MudText Typo="Typo.caption" Class="mt-2 text-center">
+                                By proceeding, you are automatically accepting the <MudLink Href="#">Terms & Conditions
+                                </MudLink>
+                            </MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </Authorized>
+    <NotAuthorized>
+        <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8 text-center">
+            <MudText Typo="Typo.h5" GutterBottom="true">Access Denied</MudText>
+            <MudText Typo="Typo.body1" Class="mb-4">You must be logged in to proceed to checkout.</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/Account/Login">Log In Now</MudButton>
+            <MudText Typo="Typo.body2" Class="mt-2">Don't have an account? <MudLink Href="/Account/Register">Register
+                    here</MudLink>
+            </MudText>
+        </MudContainer>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private CustomerAddress _customerAddress = new();
+    private DeliveryDetails _deliveryDetails = new();
+    private PaymentDetails _paymentDetails = new();
+    private List<CartItem> _cartItems = new();
+
+    private bool _editingAddress = false;
+    private bool _editingDelivery = false;
+    private bool _editingPayment = false;
+
+    private decimal _itemsTotal => _cartItems.Sum(item => item.Quantity * item.UnitPrice);
+    private decimal _deliveryFees = 70; // Example: fixed delivery fee
+    private decimal _overallTotal => _itemsTotal + _deliveryFees;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    protected override void OnInitialized()
+    {
+        breadCrumbService.Clear();
+        breadCrumbService.AddItem("Home", "/");
+        breadCrumbService.AddItem("Cart", "/cart");
+        breadCrumbService.AddItem("Checkout", "/checkout");
+        // Subscribe to cart changes from the service
+        CartService.OnCartChange += HandleCartChange;
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CartService.LoadCartForCurrentUserAsync();
+        _cartItems = CartService.GetCartItems().ToList();
+
+        await LoadCustomerAddressFromProfile();
+        await LoadDeliveryDetailsFromProfile();
+
+        _deliveryDetails.DeliveryDateStart = DateTime.Today.AddDays(4); // Example: Delivery 4-5 days from now
+        _deliveryDetails.DeliveryDateEnd = DateTime.Today.AddDays(5);
+        StateHasChanged();
+    }
+
+    private async Task LoadCustomerAddressFromProfile()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var appUser = await UserManager.GetUserAsync(user);
+            if (appUser != null)
+            {
+                _customerAddress = new CustomerAddress
+                {
+                    FullName = $"{appUser.FirstName} {appUser.LastName}",
+                    Email = appUser.Email ?? string.Empty,
+                    PhoneNumber = appUser.PhoneNumber ?? string.Empty,
+                    StreetAddress = appUser.ShippingAddress ?? "P.O.Box 05200",
+                    City = "Nairobi", // Example
+                    PostalCode = "00100" // Example
+                };
+            }
+        }
+    }
+    private async Task LoadDeliveryDetailsFromProfile()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var appUser = await UserManager.GetUserAsync(user);
+            if (appUser != null)
+            {
+                _deliveryDetails = new DeliveryDetails
+                {
+                    DeliveryMethod = appUser.PreferredDeliveryMethod,
+                    PickupStationName = appUser.PreferredPickupStationName,
+                    PickupStationAddress = appUser.PreferredPickupStationAddress,
+                    DeliveryDateStart = DateTime.Today.AddDays(4),
+                    DeliveryDateEnd = DateTime.Today.AddDays(5)
+                };
+                _paymentDetails = new PaymentDetails
+                {
+                    PaymentMethodType = appUser.PreferredPaymentMethodType
+                };
+            }
+        }
+    }
+
+
+    private void HandleCartChange()
+    {
+        _cartItems = CartService.GetCartItems().ToList();
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        CartService.OnCartChange -= HandleCartChange; // Unsubscribe to prevent memory leaks
+    }
+    private void ToggleAddressEdit()
+    {
+        _editingAddress = !_editingAddress;
+    }
+
+    private async Task SaveAddress() // Made async
+    {
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var appUser = await UserManager.GetUserAsync(user);
+            if (appUser != null)
+            {
+                appUser.FirstName = _customerAddress.FullName.Split(' ', 2)[0]; // Basic split
+                appUser.LastName = _customerAddress.FullName.Contains(' ') ? _customerAddress.FullName.Split(' ', 2)[1] : "";
+                appUser.PhoneNumber = _customerAddress.PhoneNumber;
+                appUser.ShippingAddress = _customerAddress.StreetAddress;
+
+                var result = await UserManager.UpdateAsync(appUser);
+                if (result.Succeeded)
+                {
+                    Snackbar.Add("Address saved to profile!", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add($"Error saving address: {string.Join(", ", result.Errors.Select(e => e.Description))}", Severity.Error);
+                }
+            }
+        }
+        _editingAddress = false;
+        StateHasChanged();
+    }
+
+    private void ToggleDeliveryEdit()
+    {
+        _editingDelivery = !_editingDelivery;
+    }
+
+    private async Task SaveDeliveryDetails()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var appUser = await UserManager.GetUserAsync(user);
+            if (appUser != null)
+            {
+                appUser.PreferredDeliveryMethod = _deliveryDetails.DeliveryMethod;
+                appUser.PreferredPickupStationName = _deliveryDetails.PickupStationName;
+                appUser.PreferredPickupStationAddress = _deliveryDetails.PickupStationAddress;
+
+                var result = await UserManager.UpdateAsync(appUser);
+                if (result.Succeeded)
+                {
+                    Snackbar.Add("Delivery details saved to profile!", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add($"Error saving delivery details: {string.Join(", ", result.Errors.Select(e => e.Description))}",
+                    Severity.Error);
+                }
+            }
+        }
+        _editingDelivery = false;
+        StateHasChanged();
+    }
+
+    private void TogglePaymentEdit()
+    {
+        _editingPayment = !_editingPayment;
+    }
+    private async Task SavePaymentMethod()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var appUser = await UserManager.GetUserAsync(user);
+            if (appUser != null)
+            {
+                appUser.PreferredPaymentMethodType = _paymentDetails.PaymentMethodType;
+
+                var result = await UserManager.UpdateAsync(appUser);
+                if (result.Succeeded)
+                {
+                    Snackbar.Add("Payment method saved to profile!", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add($"Error saving payment method: {string.Join(", ", result.Errors.Select(e => e.Description))}",
+                    Severity.Error);
+                }
+            }
+        }
+        _editingPayment = false;
+        StateHasChanged();
+    }
+
+    private void ModifyCart()
+    {
+        NavigationManager.NavigateTo("/cart");
+    }
+
+    private async Task ConfirmOrder()
+    {
+        // Basic Validation
+        if (_customerAddress == null || string.IsNullOrWhiteSpace(_customerAddress.FullName))
+        {
+            Snackbar.Add("Please provide your customer address.", Severity.Warning);
+            return;
+        }
+        if (_deliveryDetails == null || string.IsNullOrWhiteSpace(_deliveryDetails.DeliveryMethod))
+        {
+            Snackbar.Add("Please provide delivery details.", Severity.Warning);
+            return;
+        }
+        if (_paymentDetails == null || string.IsNullOrWhiteSpace(_paymentDetails.PaymentMethodType))
+        {
+            Snackbar.Add("Please select a payment method.", Severity.Warning);
+            return;
+        }
+        if (!_cartItems.Any())
+        {
+            Snackbar.Add("Your cart is empty. Please add items to proceed.", Severity.Warning);
+            return;
+        }
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userId = UserManager.GetUserId(user);
+
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            Snackbar.Add("User not authenticated. Please log in to complete your order.", Severity.Error);
+            NavigationManager.NavigateTo("/Account/Login");
+            return;
+        }
+
+        // Create OrderItems from CartItems
+        var orderItems = _cartItems.Select(ci => new OrderItem
+        {
+            ProductId = ci.ProductId,
+            Quantity = ci.Quantity,
+            UnitPrice = ci.UnitPrice
+        }).ToList();
+
+        var order = new Order
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            OrderDate = DateTime.UtcNow,
+            TotalAmount = _overallTotal,
+            DeliveryFees = _deliveryFees,
+            Status = "Pending", // Initial status
+            CustomerAddress = _customerAddress,
+            DeliveryDetails = _deliveryDetails,
+            PaymentDetails = _paymentDetails,
+            OrderItems = orderItems // Assign the created OrderItems
+        };
+
+        using (var context = DbFactory.CreateDbContext())
+        {
+            try
+            {
+                context.Orders.Add(order);
+                await context.SaveChangesAsync();
+
+                await CartService.ClearCart();
+                Snackbar.Add("Order Confirmed Successfully!", Severity.Success);
+                NavigationManager.NavigateTo($"/orderconfirmation/{order.Id}");
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error confirming order: {ex.Message}", Severity.Error);
+                Console.WriteLine($"Order Confirmation Error: {ex.Message}");
+            }
+        }
+    }
+}

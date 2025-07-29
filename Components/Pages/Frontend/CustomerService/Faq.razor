@@ -1,0 +1,87 @@
+@page "/faq"
+
+@using MudBlazor
+
+<PageTitle>FAQ - eShop</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-8">
+    <MudGrid Justify="Justify.Center" Spacing="4">
+        <MudItem xs="12" Class="text-center">
+            <MudText Typo="Typo.h3" Color="Color.Dark" Class="mb-4">Frequently Asked Questions</MudText>
+            <MudText Typo="Typo.h5" Color="Color.Primary"  Class="mud-text-secondary mb-6">
+                Find answers to the most common questions about our products and services.
+            </MudText>
+            <MudDivider Class="my-8" />
+        </MudItem>
+
+        <MudItem xs="12" sm="10" md="8">
+            <MudExpansionPanels MultiExpansion="true" Class="rounded-lg">
+                @foreach (var faq in faqs)
+                {
+                    <MudExpansionPanel Text="@faq.Question">
+                        <ChildContent>
+                            <MudText Typo="Typo.body1" Class="mud-text-secondary pa-4">
+                                @faq.Answer
+                            </MudText>
+                        </ChildContent>
+                    </MudExpansionPanel>
+                }
+            </MudExpansionPanels>
+        </MudItem>
+
+        <MudItem xs="12" Class="text-center mt-8">
+            <MudText Typo="Typo.h5" Class="mb-4">Still have questions?</MudText>
+            <MudButton Href="/contact" Variant="Variant.Filled" Color="Color.Secondary" Size="Size.Large" EndIcon="@Icons.Material.Filled.Forum">
+                Contact Our Support Team
+            </MudButton>
+        </MudItem>
+
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private List<FAQItem> faqs = new List<FAQItem>
+    {
+        new FAQItem
+        {
+            Question = "How do I place an order?",
+            Answer = "To place an order, simply browse our products, add the desired items to your cart, and proceed to checkout. Follow the on-screen instructions to provide shipping and payment details."
+        },
+        new FAQItem
+        {
+            Question = "What payment methods do you accept?",
+            Answer = "We accept major credit cards (Visa, MasterCard, American Express), PayPal, and other local payment methods as indicated during checkout."
+        },
+        new FAQItem
+        {
+            Question = "How long does shipping take?",
+            Answer = "Standard shipping usually takes 5-7 business days. Express shipping is available for 2-3 business days. International shipping times vary by destination."
+        },
+        new FAQItem
+        {
+            Question = "Can I track my order?",
+            Answer = "Yes, once your order is shipped, you will receive an email with a tracking number and a link to track your package. You can also find tracking information in your account's order history."
+        },
+        new FAQItem
+        {
+            Question = "What is your return policy?",
+            Answer = "We offer a 30-day return policy for most items, provided they are in their original condition. Please visit our 'Shipping & Delivery' or 'Returns & Refunds' page for detailed instructions on how to initiate a return."
+        },
+        new FAQItem
+        {
+            Question = "Do you offer international shipping?",
+            Answer = "Yes, we ship to many international destinations. Please note that international orders may be subject to customs duties and taxes, which are the responsibility of the recipient."
+        },
+        new FAQItem
+        {
+            Question = "How can I contact customer support?",
+            Answer = "You can reach our customer support team via email at support@yourcompany.com, by phone at +1 (234) 567-890, or by using the contact form on our 'Contact Us' page."
+        }
+    };
+
+    private class FAQItem
+    {
+        public string Question { get; set; } = string.Empty;
+        public string Answer { get; set; } = string.Empty;
+    }
+}

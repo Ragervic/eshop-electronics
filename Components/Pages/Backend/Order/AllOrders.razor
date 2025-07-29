@@ -1,0 +1,413 @@
+@page "/admin-orders"
+@layout AdminLayout
+@using TestP.Components.Layout
+@rendermode InteractiveServer
+
+@using Microsoft.EntityFrameworkCore
+@using MudBlazor
+@using TestP.Data
+@using TestP.Models
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>All Orders - Admin</PageTitle>
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-8">
+             <MudPaper Elevation="2" Style="background-color:	#c9dcff; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  top: 0;z-index: 1000;">
+                <MudText Typo="Typo.h4" Class="mb-8 mt-4 text-bold" GutterBottom="true" Color="Color.Primary">All
+                    Customer Orders
+            </MudText>
+        </MudPaper>
+
+            <MudGrid Spacing="2" Class="mb-4">
+                <MudItem xs="12" sm="4">
+                    <MudSelect T="string" Label="Filter by Status" Variant="Variant.Outlined"
+                        @bind-Value="SelectedStatus" Clearable="true" AnchorOrigin="Origin.BottomCenter">
+                        <MudSelectItem T="string" Value="@(null)">All Statuses</MudSelectItem>
+                        @foreach (var status in _allPossibleStatuses)
+                        {
+                            <MudSelectItem T="string" Value="@status">@status</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudSelect T="string" Label="Filter by Delivery Method" Variant="Variant.Outlined"
+                        @bind-Value="SelectedDeliveryMethod" Clearable="true" AnchorOrigin="Origin.BottomCenter">
+                        <MudSelectItem T="string" Value="@(null)">All Methods</MudSelectItem>
+                        @foreach (var method in _allPossibleDeliveryMethods)
+                        {
+                            <MudSelectItem T="string" Value="@method">@method</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudDatePicker Label="Start Date" Variant="Variant.Outlined" @bind-Date="StartDate"
+                        Clearable="true" />
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudDatePicker Label="End Date" Variant="Variant.Outlined" @bind-Date="EndDate" Clearable="true" />
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ClearFilters" Class="mt-6">Clear
+                        Filters</MudButton>
+                </MudItem>
+            </MudGrid>
+
+
+            @if (_isLoading && !_currentOrdersPage.Any()) // Only show global loader if no data is present yet
+            {
+                <MudProgressLinear Indeterminate="true" Class="my-4" />
+                <MudText Typo="Typo.body1">Loading orders...</MudText>
+            }
+            @* The MudTable should always be rendered to allow ServerData to function *@
+            <MudTable T="Order"
+                      ServerData="@(new Func<TableState, CancellationToken, Task<TableData<Order>>>(ServerReload))"
+                      @ref="_mudTable"
+                      Breakpoint="Breakpoint.Sm" Class="mb-4 mud-elevation-2"
+                      RowsPerPage="25" Dense="true" Hover="true">
+                <HeaderContent>
+                    <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.Id)">ORDER ID</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.CustomerAddress.Email)">CUSTOMER</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.TotalAmount)">AMOUNT</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.Status)">STATUS</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.OrderDate)">DATE</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.DeliveryDetails.DeliveryMethod)">DELIVERY METHOD</MudTableSortLabel></MudTh>
+                    <MudTh>ACTIONS</MudTh>
+                </HeaderContent>
+                <RowTemplate Context="item">
+                    <MudTd DataLabel="Order ID">@item.Id.ToString().Substring(0, 8)</MudTd>
+                    <MudTd DataLabel="Customer">@item.CustomerAddress?.Email</MudTd>
+                    <MudTd DataLabel="Amount">@item.TotalAmount.ToString("C2",new System.Globalization.CultureInfo("en-KE"))</MudTd>
+                    <MudTd DataLabel="Status">
+                        <MudChip T="string" Color="@GetStatusColor(item.Status)">@item.Status</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Order Date">@item.OrderDate.ToString("dd MMM yyyy HH:mm")</MudTd>
+                    <MudTd DataLabel="Delivery Method">@item.DeliveryDetails?.DeliveryMethod</MudTd>
+                    <MudTd DataLabel="Actions">
+                        <MudIconButton Icon="@Icons.Material.Filled.EditAttributes" Color="Color.Primary" Size="Size.Large"
+                            OnClick="() => NavigateToOrderDetails(item.Id)" />
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                            OnClick="@(() => ApproveOrder(item))" Class="me-2">
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" /> Approve
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="@(() => RevokeOrder(item))">
+                            <MudIcon Icon="@Icons.Material.Filled.DeleteSweep" /> Revoke
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+
+                <NoRecordsContent>
+                    @if (!_isLoading && !_currentOrdersPage.Any())
+                    {
+                        <MudText Typo="Typo.body2" Class="py-4">No orders found matching your criteria.</MudText>
+                    }
+                </NoRecordsContent>
+                <LoadingContent>
+                    <MudText Typo="Typo.body2" Class="py-4">Loading orders...</MudText>
+                </LoadingContent>
+
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+        </MudContainer>
+    </Authorized>
+    <NotAuthorized>
+        <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8 text-center">
+            <MudText Typo="Typo.h5" GutterBottom="true">Access Denied</MudText>
+            <MudText Typo="Typo.body1" Class="mb-4">You must be logged in as an administrator to view all orders.
+            </MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/Account/Login">Log In Now</MudButton>
+        </MudContainer>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<Order> _currentOrdersPage = new();
+    private int _totalItems;
+    private bool _isLoading = true; 
+
+    private MudTable<Order>? _mudTable;
+
+    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+
+    // Filter properties with custom setters to trigger data reload
+    private string? _selectedStatusField;
+    private string? SelectedStatus
+    {
+        get => _selectedStatusField;
+        set
+        {
+            if (_selectedStatusField != value)
+            {
+                _selectedStatusField = value;
+                _ = _mudTable?.ReloadServerData();
+            }
+        }
+    }
+
+    private string? _selectedDeliveryMethodField;
+    private string? SelectedDeliveryMethod
+    {
+        get => _selectedDeliveryMethodField;
+        set
+        {
+            if (_selectedDeliveryMethodField != value)
+            {
+                _selectedDeliveryMethodField = value;
+                _ = _mudTable?.ReloadServerData();
+            }
+        }
+    }
+
+    private DateTime? _startDateField;
+    private DateTime? StartDate
+    {
+        get => _startDateField;
+        set
+        {
+            if (_startDateField != value)
+            {
+                _startDateField = value;
+                _ = _mudTable?.ReloadServerData();
+            }
+        }
+    }
+
+    private DateTime? _endDateField;
+    private DateTime? EndDate
+    {
+        get => _endDateField;
+        set
+        {
+            if (_endDateField != value)
+            {
+                _endDateField = value;
+                _ = _mudTable?.ReloadServerData();
+            }
+        }
+    }
+
+    private List<string> _allPossibleStatuses = new()
+    {
+        "Pending", "Processing", "Shipped", "Delivered", "Cancelled", "Returned"
+    };
+    private List<string> _allPossibleDeliveryMethods = new()
+    {
+        "Pickup Station", "Home Delivery"
+        @* "Standard Shipping", "Express Delivery", "Pickup", "Courier" *@
+    };
+
+    private async Task<TableData<Order>> ServerReload(TableState state, CancellationToken cancellationToken)
+    {
+        _isLoading = true;
+        StateHasChanged(); 
+        using (var context = await DbFactory.CreateDbContextAsync())
+        {
+            try
+            {
+                IQueryable<Order> query = context.Orders
+                    .Include(o => o.CustomerAddress)
+                    .Include(o => o.DeliveryDetails);
+
+                // Apply filters (using the public properties)
+                if (!string.IsNullOrWhiteSpace(SelectedStatus))
+                {
+                    query = query.Where(o => o.Status == SelectedStatus);
+                }
+
+                if (!string.IsNullOrWhiteSpace(SelectedDeliveryMethod))
+                {
+                    query = query.Where(o => o.DeliveryDetails != null && o.DeliveryDetails.DeliveryMethod == SelectedDeliveryMethod);
+                }
+
+                if (StartDate.HasValue)
+                {
+                    query = query.Where(o => o.OrderDate.Date >= StartDate.Value.Date);
+                }
+
+                if (EndDate.HasValue)
+                {
+                    query = query.Where(o => o.OrderDate.Date <= EndDate.Value.Date);
+                }
+
+                _totalItems = await query.CountAsync(cancellationToken);
+
+                switch (state.SortLabel)
+                {
+                    case "ORDER ID":
+                        query = state.SortDirection == SortDirection.Descending ? query.OrderByDescending(o => o.Id) : query.OrderBy(o => o.Id);
+                        break;
+                    case "CUSTOMER":
+                        query = state.SortDirection == SortDirection.Descending ? query.OrderByDescending(o => o.CustomerAddress.Email) : query.OrderBy(o => o.CustomerAddress.Email);
+                        break;
+                    case "AMOUNT":
+                        query = state.SortDirection == SortDirection.Descending ? query.OrderByDescending(o => o.TotalAmount) : query.OrderBy(o => o.TotalAmount);
+                        break;
+                    case "STATUS":
+                        query = state.SortDirection == SortDirection.Descending ? query.OrderByDescending(o => o.Status) : query.OrderBy(o => o.Status);
+                        break;
+                    case "DATE":
+                        query = state.SortDirection == SortDirection.Descending ? query.OrderByDescending(o => o.OrderDate) : query.OrderBy(o => o.OrderDate);
+                        break;
+                    case "DELIVERY METHOD":
+                        query = state.SortDirection == SortDirection.Descending ? query.OrderByDescending(o => o.DeliveryDetails.DeliveryMethod) : query.OrderBy(o => o.DeliveryDetails.DeliveryMethod);
+                        break;
+                    default:
+                        query = query.OrderByDescending(o => o.OrderDate); // Default sort
+                        break;
+                }
+
+                _currentOrdersPage = await query.Skip(state.Page * state.PageSize).Take(state.PageSize).ToListAsync(cancellationToken);
+
+                return new TableData<Order>() { TotalItems = _totalItems, Items = _currentOrdersPage };
+            }
+            catch (OperationCanceledException)
+            {
+                Console.WriteLine("Order data loading was cancelled.");
+                _currentOrdersPage = new();
+                _totalItems = 0;
+                return new TableData<Order>() { TotalItems = 0, Items = new List<Order>() };
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error loading orders: {ex.Message}", Severity.Error);
+                Console.WriteLine($"Error loading orders: {ex.Message}");
+                _currentOrdersPage = new();
+                _totalItems = 0;
+                return new TableData<Order>() { TotalItems = 0, Items = new List<Order>() };
+            }
+            finally
+            {
+                _isLoading = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+
+    private async Task NavigateToOrderDetails(Guid orderId)
+    {
+        var parameters = new DialogParameters { ["OrderId"] = orderId };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+        var dialog = await DialogService.ShowAsync<OrderDetailsDialog>("Order Details", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is bool statusUpdated && statusUpdated)
+        {
+            _ = _mudTable?.ReloadServerData();
+        }
+    }
+
+    private async Task ClearFilters()
+    {
+        _selectedStatusField = null;
+        _startDateField = null;
+        _endDateField = null;
+        _selectedDeliveryMethodField = null;
+
+        _ = _mudTable?.ReloadServerData();
+    }
+
+    private Color GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "Delivered" => Color.Success,
+            "Shipped" => Color.Warning,
+            "Pending" => Color.Info,
+            "Processing" => Color.Info,
+            "Cancelled" => Color.Error,
+            "Returned" => Color.Error,
+            _ => Color.Default,
+        };
+    }
+
+    private async Task ApproveOrder(Order order)
+    {
+        if (order.Status == "Completed" || order.Status == "Cancelled")
+        {
+            Snackbar.Add($"Order {order.Id.ToString().Substring(0, 8)} is already processed.", Severity.Warning);
+            return;
+        }
+        else if (order.Status == "Shipped" || order.Status == "Delivered")
+        {
+            Snackbar.Add($"Order {order.Id.ToString().Substring(0, 8)} is already shipped or delivered.", Severity.Warning);
+            return;
+        }
+        else if (order.Status == "Processing")
+        {
+            Snackbar.Add($"Order {order.Id.ToString().Substring(0, 8)} is already being processed.", Severity.Warning);
+            return;
+        }
+        else if (order.Status == "Pending")
+        {
+            using (var context = await DbFactory.CreateDbContextAsync())
+            {
+                var orderToUpdate = await context.Orders.FindAsync(order.Id);
+                if (orderToUpdate != null)
+                {
+                    orderToUpdate.Status = "Completed";
+                    await context.SaveChangesAsync();
+                    Snackbar.Add($"Order {order.Id.ToString().Substring(0, 8)} approved successfully.", Severity.Success);
+                    _ = _mudTable?.ReloadServerData();
+                }
+                else
+                {
+                    Snackbar.Add($"Order {order.Id.ToString().Substring(0, 8)} not found in database.", Severity.Error);
+                }
+            }
+        }
+        else
+        {
+            Snackbar.Add($"Order {order.Id.ToString().Substring(0, 8)} cannot be approved in its current state.", Severity.Warning);
+        }
+    }
+
+    private async Task RevokeOrder(Order order)
+    {
+        if (order.Status == "Shipped" || order.Status == "Delivered")
+        {
+            Snackbar.Add($"Order {order.Id.ToString().Substring(0, 8)} cannot be revoked after shipping or delivery.", Severity.Warning);
+            return;
+        }
+        else if (order.Status == "Returned")
+        {
+            Snackbar.Add($"Order {order.Id.ToString().Substring(0, 8)} has already been returned and cannot be revoked.", Severity.Warning);
+            return;
+        }
+
+        else if (order.Status == "Completed" && order.DeliveryDetails?.DeliveryMethod == "Courier")
+        {
+            Snackbar.Add($"Order {order.Id.ToString().Substring(0, 8)} is already completed and cannot be revoked.", Severity.Warning);
+            return;
+        }
+        else if (order.Status == "Cancelled")
+        {
+            Snackbar.Add($"Order {order.Id.ToString().Substring(0, 8)} is already cancelled.", Severity.Warning);
+            return;
+        }
+        else
+        {
+            using (var context = await DbFactory.CreateDbContextAsync())
+            {
+                var orderToUpdate = await context.Orders.FindAsync(order.Id);
+                if (orderToUpdate != null)
+                {
+                    orderToUpdate.Status = "Cancelled";
+                    await context.SaveChangesAsync();
+                    Snackbar.Add($"Order {order.Id.ToString().Substring(0, 8)} revoked successfully.", Severity.Warning);
+                    _ = _mudTable?.ReloadServerData();
+                }
+                else
+                {
+                    Snackbar.Add($"Order {order.Id.ToString().Substring(0, 8)} not found in database.", Severity.Error);
+                }
+            }
+        }
+    }
+}

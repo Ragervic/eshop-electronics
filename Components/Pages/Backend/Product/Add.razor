@@ -1,0 +1,294 @@
+@page "/products/add"
+@using TestP.Components.Layout
+@layout AdminLayout
+@rendermode InteractiveServer
+
+
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.EntityFrameworkCore
+@using MudBlazor
+@using TestP.Models
+@using TestP.Controllers
+@using TestP.Services
+@using TestP.Data
+@using System.IO 
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject ICategoryService CategoryService
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+@inject IWebHostEnvironment WebHostEnvironment 
+
+
+<PageTitle>Product Management - Add Product</PageTitle>
+
+ <MudPaper Elevation="2" Style="background-color:	#c9dcff; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  top: 0;z-index: 1000;">
+    <MudText Typo="Typo.h4" Class="mb-8 mt-4 text-bold" GutterBottom="true" Color="Color.Primary">Add Product
+            </MudText>
+        </MudPaper>
+<MudPaper Class="pa-4">
+    <MudCard>
+        <MudForm Model="@product" @ref="form" EnableValidation="true">
+
+            <MudGrid Spacing="3">
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="product.Name" Label="Product Name" Required="true"
+                                  RequiredError="Product Name is required!" Clearable="true" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="product.Brand" Label="Product Brand" Required="true"
+                                  RequiredError="Product Brand is required!" Clearable="true" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="product.Description" Label="Description" Lines="3"
+                                  HelperText="A brief description of the product." />
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="product.Price" Label="Product Price" Required="true"
+                                  RequiredError="Product Price is required!" Adornment="Adornment.Start" AdornmentText="KES"
+                                  For="@(() => product.Price)" InputType="InputType.Number" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudNumericField @bind-Value="product.StockQuantity" Label="Stock" Required="true" Min="0" Max="10000"
+                                     HideSpinButtons="false" RequiredError="Stock is required!" Step="1"
+                                     For="@(() => product.StockQuantity)" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    @if (categories == null)
+                    {
+                        <MudProgressLinear Indeterminate="true" Class="my-4" />
+                        <MudText>Loading categories...</MudText>
+                    }
+                    else if (!categories.Any())
+                    {
+                        <MudAlert Severity="Severity.Warning">No categories found. Please add categories first.</MudAlert>
+                    }
+                    else
+                    {
+                        <MudSelect T="int" Label="Product Category" @bind-Value="product.CategoryId" Required="true"
+                                   RequiredError="Product Category is required!" Variant="Variant.Text" Clearable="true"
+                                   Placeholder="Select a category" For="@(() => product.CategoryId)">
+                            @foreach (var category in categories)
+                            {
+                                <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    }
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Class="mt-4 mb-2">Product Image</MudText>
+                    @* Image Upload Field *@
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <InputFile OnChange="HandleFileSelection" id="fileInput" hidden />
+                        <MudButton HtmlTag="label" For="fileInput" Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.CloudUpload">
+                            Browse File
+                        </MudButton>
+                        @if (_selectedFileName != null)
+                        {
+                            <MudText>@_selectedFileName</MudText>
+                        }
+                    </MudStack>
+
+                    @if (_uploadedImageUrl != null)
+                    {
+                        <MudImage Src="@_uploadedImageUrl" Alt="Product Preview" Width="200" Class="mt-3 rounded-lg" Style="object-fit: contain;" />
+                    }
+                    else if (!string.IsNullOrEmpty(product.ImageUrl) && product.ImageUrl != "images/placeholder.png")
+                    {
+                        <MudImage Src="@product.ImageUrl" Alt="Current Image" Width="200" Class="mt-3 rounded-lg" Style="object-fit: contain;" />
+                    }
+                    else
+                    {
+                        <MudImage Src="images/placeholder.png" Alt="No Image" Width="200" Class="mt-3 rounded-lg mud-border-grey-lighten2" Style="object-fit: contain;" />
+                    }
+
+                    @if (_isUploading)
+                    {
+                        <MudProgressLinear Indeterminate="true" Class="my-3" />
+                        <MudText Typo="Typo.caption" Color="Color.Primary">Uploading image...</MudText>
+                    }
+                    <MudText Typo="Typo.caption" Color="Color.Error">
+                        @if (string.IsNullOrEmpty(product.ImageUrl) || product.ImageUrl == "images/placeholder.png")
+                        {
+                            <span>Product image is required!</span>
+                        }
+                    </MudText>
+                </MudItem>
+            </MudGrid>
+
+
+            <div class="d-flex justify-content-end mt-6">
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mr-2"
+                           OnClick="AddProduct" Disabled="_isUploading"> @* Disable button while uploading *@
+                    Add Product
+                </MudButton>
+                <MudButton Variant="Variant.Text" OnClick="GoBack">
+                    Cancel
+                </MudButton>
+            </div>
+        </MudForm>
+    </MudCard>
+</MudPaper>
+@code {
+    private Product product = new Product();
+    private MudForm? form;
+    private List<Category>? categories;
+
+    private IBrowserFile? _selectedFile;
+    private string? _selectedFileName;
+    private string? _uploadedImageUrl;
+    private bool _isUploading = false;
+
+    // Maximum file size for image upload (e.g., 5MB)
+    private const long MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            categories = await CategoryService.GetCategoriesAsync();
+            // Initialize ImageUrl to placeholder if not already set (for new product)
+            if (string.IsNullOrEmpty(product.ImageUrl))
+            {
+                product.ImageUrl = "images/placeholder.png";
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading categories: {ex.Message}", Severity.Error);
+            Console.WriteLine($"Error loading categories: {ex.Message}");
+            categories = new List<Category>();
+        }
+    }
+
+    private async Task HandleFileSelection(InputFileChangeEventArgs e)
+    {
+        _selectedFile = e.File;
+        _selectedFileName = _selectedFile?.Name; // Use null-conditional operator
+        _uploadedImageUrl = null; // Clear previous preview if a new file is selected
+
+        if (_selectedFile == null)
+        {
+            Snackbar.Add("No file selected.", Severity.Warning);
+            product.ImageUrl = "images/placeholder.png"; // Reset image URL if no file
+            return;
+        }
+
+        if (_selectedFile.Size > MAX_FILE_SIZE)
+        {
+            Snackbar.Add($"File size exceeds the limit of {MAX_FILE_SIZE / (1024 * 1024)}MB.", Severity.Error);
+            _selectedFile = null;
+            _selectedFileName = null;
+            product.ImageUrl = "images/placeholder.png"; // Reset image URL if file too large
+            return;
+        }
+
+        _isUploading = true;
+        StateHasChanged(); // Update UI to show loading indicator
+
+        try
+        {
+            // Define the path where you want to save the file on the server.
+            // This path should be accessible by your web server (e.g., wwwroot/images/products)
+            var uploadsPath = Path.Combine(WebHostEnvironment.WebRootPath, "images", "products");
+
+            // Ensure the directory exists
+            if (!Directory.Exists(uploadsPath))
+            {
+                Directory.CreateDirectory(uploadsPath);
+            }
+
+            // Generate a unique file name to prevent overwrites,
+            // using Guid to ensure uniqueness
+            var fileExtension = Path.GetExtension(_selectedFile.Name);
+            var uniqueFileName = $"{Guid.NewGuid().ToString()}{fileExtension}";
+            var fullFilePath = Path.Combine(uploadsPath, uniqueFileName);
+
+            // Create the file and copy the stream
+            // The OpenReadStream(MAX_FILE_SIZE) limits the size of the stream to prevent malicious large uploads
+            await using (var stream = _selectedFile.OpenReadStream(MAX_FILE_SIZE))
+            {
+                await using (var fileStream = File.Create(fullFilePath))
+                {
+                    await stream.CopyToAsync(fileStream);
+                }
+            }
+
+            // Update the product.ImageUrl with the relative path for web access
+            // Use Replace("\\", "/") to ensure correct URL format for web access
+            product.ImageUrl = Path.Combine("images", "products", uniqueFileName).Replace("\\", "/");
+            _uploadedImageUrl = product.ImageUrl; // Set for preview
+
+            Snackbar.Add($"Image '{_selectedFile.Name}' uploaded successfully!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"An error occurred during image upload: {ex.Message}", Severity.Error);
+            Console.WriteLine($"File upload error: {ex.Message}");
+            product.ImageUrl = "images/placeholder.png"; // Revert to placeholder on error
+            _uploadedImageUrl = null;
+        }
+        finally
+        {
+            _isUploading = false; // Stop loading indicator
+            _selectedFile = null; // Clear selected file after processing
+            StateHasChanged(); // Update UI after upload
+        }
+    }
+
+
+    private async Task AddProduct()
+    {
+        await form!.Validate();
+
+        // Ensure an image has been uploaded and its URL is set
+        if (string.IsNullOrEmpty(product.ImageUrl) || product.ImageUrl == "images/placeholder.png")
+        {
+            Snackbar.Add("Please upload a product image.", Severity.Warning);
+            return; // Prevent saving if image is missing
+        }
+
+        if (form.IsValid && !_isUploading) // Ensure no upload is in progress
+        {
+            var dbContext = DbFactory.CreateDbContext();
+            try
+            {
+                dbContext.Products.Add(product);
+                await dbContext.SaveChangesAsync();
+
+                Snackbar.Add("Product added successfully!", Severity.Success);
+
+                // No need for StateHasChanged() and Task.Delay(100) before navigation
+                // as NavigationManager.NavigateTo handles UI updates implicitly.
+                NavigationManager.NavigateTo("/products", forceLoad: true);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error adding product: {ex.Message}", Severity.Error);
+                Console.WriteLine($"Error adding product: {ex.Message}");
+            }
+        }
+        else if (!form.IsValid)
+        {
+            Snackbar.Add("Please correct the form errors.", Severity.Warning);
+        }
+        // If _isUploading is true, the user needs to wait for the upload to finish.
+    }
+
+    // REMOVED: Helper class to deserialize the upload response (not needed for direct System.IO)
+    // private class UploadResult
+    // {
+    //     public string? ImageUrl { get; set; }
+    // }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/products");
+    }
+}

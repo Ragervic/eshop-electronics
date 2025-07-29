@@ -1,0 +1,183 @@
+.flash-red {
+  animation: flashRed 1s infinite alternate;
+}
+
+@keyframes flashRed {
+  0% {
+    background-color: #ffffffff;
+  }
+  50% {
+    background-color: #e56464ff;
+  }
+  100% {
+    background-color: #ec0000ff;
+  }
+}
+.flash-orange {
+  animation: flashOrange 1s infinite alternate;
+}
+
+@keyframes flashOrange {
+  0% {
+    background-color: #ffffffff;
+  }
+  50% {
+    background-color: #e3a466ff;
+  }
+  100% {
+    background-color: #ecc100ff;
+  }
+}
+.flash-red:hover {
+  color: var(--mud-palette-red) !important;
+  animation: none;
+  background-color: transparent !important;
+}
+.flash-orange:hover {
+  color: var(--mud-palette-warning) !important;
+  animation: none;
+  background-color: transparent !important;
+}
+
+.low-stock-warning {
+  color: #cc0000;
+  font-weight: bold;
+}
+
+.mid-stock-warning {
+  color: #ffa500;
+  font-weight: bold;
+}
+
+.text-success {
+  /* color: var(--mud-palette-success) !important; */
+  font-weight: bold;
+}
+
+.mud-card-hover-effect {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.mud-card-hover-effect:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+.product-description-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.centered-placeholder-input
+  .mud-input-slot.mud-input-root::-webkit-input-placeholder {
+  text-align: center;
+  text-size: 24px;
+}
+
+/* In wwwroot/css/site.css */
+
+.footer-background {
+  background-color: #212121; /* Dark background for the footer */
+  color: #ffffff; /* Default text color for the footer */
+}
+
+/* Specific text colors for better contrast on dark background */
+.mud-text-white {
+  color: #ffffff !important;
+}
+
+.mud-text-white-text-secondary {
+  color: rgba(
+    255,
+    255,
+    255,
+    0.7
+  ) !important; /* Lighter white for secondary text */
+}
+
+/* Style MudListItem for hover effect */
+.mud-list-item.mud-list-item-link.mud-ripple:hover {
+  background-color: rgba(
+    255,
+    255,
+    255,
+    0.1
+  ) !important; /* Subtle hover effect */
+}
+
+/* Style for the divider in the footer */
+.mud-border-white-text-secondary {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Make social icons slightly larger for better visibility */
+.mud-icon-button.mud-icon-button-color-inherit .mud-icon {
+  font-size: 1.5rem; /* Adjust as needed */
+}
+
+/* For payment icons - ensure they are aligned and sized well */
+.d-flex.gap-2 img {
+  height: 25px; /* Consistent height for all payment icons */
+  width: auto;
+}
+
+html,
+body,
+#app {
+  /* Or whatever ID your main Blazor app root div has */
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Ensure MudLayout also takes full height */
+.mud-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* Minimum height of the viewport */
+}
+
+/* MudBlazor's MudMainContent usually handles flex-grow automatically,
+   but you can enforce it if needed. */
+.mud-main-content {
+  flex-grow: 1; /* This pushes the footer down */
+  display: flex; /* Make it a flex container */
+  flex-direction: column; /* For content inside to stack vertically */
+}
+
+/* The footer itself */
+.footer-background {
+  /* Your existing footer styles */
+  /* Add any specific positioning if needed, though flexbox should handle it */
+}
+
+.mud-select-width-200 {
+  width: 200px;
+}
+.mud-image-fit-content {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 1000; /* Ensure it stays above other content */
+  background-color: #d114d1ff; /* Background color for the header */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+/* Responsive design */
+@media (min-width: 480px) {
+  .external-login-buttons {
+    flex-direction: row;
+    gap: 16px;
+  }
+
+  .external-login-btn {
+    flex: 1;
+  }
+}

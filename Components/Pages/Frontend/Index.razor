@@ -1,0 +1,258 @@
+@page "/"
+
+@using TestP.Models
+@using TestP.Services
+
+@inject IProductService ProductService
+@inject ICategoryService CategoryService
+@inject CartService cartService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+
+<PageTitle>eShop - Your Online Store</PageTitle>
+
+@* Browse by Category Section *@
+<MudCard Class="mb-6">
+    <MudCardHeader Class="d-flex">
+        <div class="d-flex justify-between items-center ml-4 mb-2">
+            <div>
+                <MudText Typo="Typo.h3">Available Electronic Products</MudText>
+                <MudText Typo="Typo.subtitle1" Color="Color.Primary">Browse Categories</MudText>
+            </div>
+        </div>
+    </MudCardHeader>
+    <MudCardContent>
+        @if (_categories == null)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else if (!_categories.Any())
+        {
+            <MudText>No categories found.</MudText>
+        }
+        else
+        {
+            <MudChipSet T="int" SelectedValue="@_selectedCategoryId" SelectedColor="Color.Tertiary">
+                <MudChip Text="All Products" Color="Color.Dark" Variant="Variant.Outlined" Value="@(null as int?)"
+                    OnClick="() => FilterProductsByCategory(null)" />
+
+                @foreach (var category in _categories)
+                {
+                    <MudChip Text="@category.Name" Color="Color.Primary" Variant="Variant.Outlined" Value="@category.Id"
+                        OnClick="() => FilterProductsByCategory(category.Id)" />
+                }
+            </MudChipSet>
+        }
+    </MudCardContent>
+</MudCard>
+
+@* Featured Products Section *@
+<MudText Typo="Typo.h5" Class="mb-4 mt-8">Featured Products</MudText>
+
+@if (_displayedProducts == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (!_displayedProducts.Any())
+{
+    <MudText>No products available at the moment.</MudText>
+}
+else
+{
+
+    <MudGrid Spacing="3">
+        @foreach (var product in _displayedProducts)
+        {
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <MudPaper Elevation="6" Class="pa-4 rounded-lg mud-card-hover-effect">
+                    <MudCard Outlined="true" Class="d-flex flex-column h-100">
+                        <MudCardMedia Image="@product.ImageUrl" Height="200"
+                            Style="object-fit: fill; background-color: #f0f0f0; border-radius: 8px;" />
+                        <MudCardContent Class="flex-grow-1 d-flex flex-column justify-content-between">
+                            <div>
+                                <MudText Typo="Typo.h6" Class="mb-1 text-truncate" Style="max-width: 100%;">@product.Name
+                                </MudText>
+                                @if (!string.IsNullOrEmpty(product.Brand))
+                                {
+                                    <MudText Typo="Typo.caption" Class="mb-2 mud-text-primary">
+                                        <MudIcon Icon="@Icons.Material.Filled.Storefront" Size="Size.Small" Class="mr-1" />
+                                        By <span class="font-weight-bold">@product.Brand</span>
+                                    </MudText>
+                                }
+
+                                @if (product.Category != null && !string.IsNullOrEmpty(product.Category.Name))
+                                {
+                                    <MudText Typo="Typo.caption" Class="mb-2 mud-text-secondary">
+                                        <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Small" Class="mr-1" />
+                                        <span class="font-weight-bold">@product.Category.Name</span>
+                                    </MudText>
+                                }
+
+                                <MudText Typo="Typo.body2" Class="mb-3 text-justify product-description-clamp">
+                                    @product.Description</MudText>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-center mt-3">
+                                <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">
+                                    <MudIcon Icon="@Icons.Material.Filled.AccountBalanceWallet" Size="Size.Medium"
+                                        Class="mr-1" />KSH
+                                    @product.Price.ToString("N2")
+                                </MudText>
+
+                                @if (product.StockQuantity > 0)
+                                {
+                                    <MudText Typo="Typo.subtitle2" Class="mud-text-success d-flex align-center">
+                                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Class="mr-1" />
+                                        In Stock (@product.StockQuantity)
+                                    </MudText>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.subtitle2" Class="mud-text-error d-flex align-center">
+                                        <MudIcon Icon="@Icons.Material.Filled.Cancel" Size="Size.Small" Class="mr-1" />
+                                        Out of Stock
+                                    </MudText>
+                                }
+                            </div>
+                        </MudCardContent>
+                        <MudCardActions
+                            Class="d-flex justify-content-between align-center px-4 py-3 border-t-1 mud-border-gray-lighten-5">
+                            <MudButton Variant="Variant.Text" Color="Color.Info" Href="@($"products/{product.Id}")"
+                                StartIcon="@Icons.Material.Filled.Info">Details</MudButton>
+                            <MudButton Variant="Variant.Filled" OnClick="@(() => AddCartOnClickAsync(product))"
+                                Color="Color.Success" Size="Size.Medium" StartIcon="@Icons.Material.Filled.ShoppingCart"
+                                Disabled="@(product.StockQuantity <= 0)"> @* Disable if out of stock *@
+                                Add to Cart
+                            </MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudPaper>
+            </MudItem>
+
+
+        }
+    </MudGrid>
+}
+
+@code {
+    private IEnumerable<Product>? _products;
+    private IEnumerable<Product>? _displayedProducts;
+    private List<Category>? _categories;
+    private int _selectedCategoryId;
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "q")]
+    public string? SearchQuery { get; set; }
+
+    private string _searchString = string.Empty;
+    private string SearchString
+    {
+        get => _searchString;
+        set
+        {
+            if (_searchString != value)
+            {
+                _searchString = value;
+            }
+        }
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _products = await ProductService.GetProductsAsync();
+        _categories = (await CategoryService.GetCategoriesAsync())?.ToList();
+        if (!string.IsNullOrEmpty(SearchQuery))
+        {
+            _searchString = SearchQuery;
+        }
+
+        ApplyFilters();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_searchString != SearchQuery && !string.IsNullOrEmpty(SearchQuery))
+        {
+            _searchString = SearchQuery;
+        }
+        ApplyFilters();
+    }
+
+    private async Task OnSearch(string text)
+    {
+        _searchString = text;
+        NavigationManager.NavigateTo(NavigationManager.GetUriWithQueryParameters("/", new Dictionary<string, object?>{{ "q",
+_searchString }}), forceLoad: false);
+        ApplyFilters();
+    }
+
+
+    private void ApplyFilters()
+    {
+        IEnumerable<Product> filtered = _products ?? Enumerable.Empty<Product>();
+
+        if (!string.IsNullOrWhiteSpace(_searchString))
+        {
+            filtered = filtered.Where(p => (p.Name != null && p.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) ||
+            (p.Description != null && p.Description.Contains(_searchString, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        _displayedProducts = filtered.ToList();
+        StateHasChanged();
+    }
+
+    private async Task AddCartOnClickAsync(Product product)
+    {
+        if (product == null)
+        {
+            Snackbar.Add("Error: Product information is missing.", Severity.Error);
+            return;
+        }
+
+        if (product.StockQuantity <= 0)
+        {
+            Snackbar.Add($"'{product.Name}' is out of stock.", Severity.Warning);
+            return;
+        }
+        await cartService.AddToCart(product, 1);
+        Snackbar.Add($"Added '{product.Name}' to cart!", Severity.Success);
+        NavigationManager.NavigateTo("/cart");
+
+    }
+
+    private void FilterProductsByCategory(int? categoryId)
+    {
+        _selectedCategoryId = categoryId ?? 0;
+        if (!categoryId.HasValue)
+        {
+            _displayedProducts = _products;
+        }
+        else
+        {
+            _displayedProducts = _products?.Where(p => p.Category != null && p.CategoryId == categoryId);
+        }
+        StateHasChanged();
+    }
+}
+
+<style>
+    .mud-card-hover-effect {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        cursor: pointer;
+    }
+
+    .mud-card-hover-effect:hover {
+        transform: translateY(-5px);
+        box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .product-description-clamp {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>

@@ -1,0 +1,272 @@
+@using Microsoft.EntityFrameworkCore
+@using MudBlazor
+@using MudBlazor.Services
+@using TestP.Data
+@using TestP.Components.Pages.Backend.Order
+@using TestP.Models
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            Order Details: #@_order?.Id.ToString().Substring(0, 8)
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_isLoading)
+        {
+            <MudProgressLinear Indeterminate="true" Class="my-4" />
+            <MudText>Loading order details...</MudText>
+        }
+        else if (_order == null)
+        {
+            <MudAlert Severity="Severity.Error">Order details could not be loaded.</MudAlert>
+        }
+        else
+        {
+            <MudGrid Spacing="3">
+                <MudItem xs="12" sm="6">
+                    <MudCard Elevation="0" Outlined="true">
+                        <MudCardHeader>
+                            <MudText Typo="Typo.subtitle1" Class="font-weight-bold">Customer Information</MudText>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudText Typo="Typo.body2"><b>Name:</b> @_order.CustomerAddress?.FullName</MudText>
+                            <MudText Typo="Typo.body2"><b>Email:</b> @_order.CustomerAddress?.Email</MudText>
+                            <MudText Typo="Typo.body2"><b>Phone:</b> @_order.CustomerAddress?.PhoneNumber</MudText>
+                            @if (_order.CustomerAddress == null)
+                            {
+                                <MudText Typo="Typo.body2" Class="mud-text-secondary">No customer address details available.</MudText>
+                    }
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                @* Shipping Information *@
+                <MudItem xs="12" sm="6">
+                    <MudCard Elevation="0" Outlined="true">
+                        <MudCardHeader>
+                            <MudText Typo="Typo.subtitle1" Class="font-weight-bold">Shipping Information</MudText>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudText Typo="Typo.body2"><b>Address:</b> @_order.CustomerAddress?.StreetAddress</MudText>
+                            <MudText Typo="Typo.body2"><b>City:</b> @_order.CustomerAddress?.City</MudText>
+                            <MudText Typo="Typo.body2"><b>Zip/Postal Code:</b> @_order.CustomerAddress?.PostalCode</MudText>
+                            @* <MudText Typo="Typo.body2"><b>Country:</b> @_order.CustomerAddress?.Country</MudText>
+                            <MudText Typo="Typo.body2"><b>State/Province:</b> @_order.CustomerAddress?.StateProvince</MudText>
+                            <MudText Typo="Typo.body2"><b>Tracking:</b> @_order.DeliveryDetails?.TrackingNumber ?? "N/A"</MudText> *@
+                 @if (_order.CustomerAddress == null && _order.DeliveryDetails == null)
+            {
+                 <MudText Typo="Typo.body2" Class="mud-text-secondary">No shipping details available.</MudText>
+            }
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                @* Order Items *@
+                <MudItem xs="12">
+                    <MudCard Elevation="0" Outlined="true">
+                        <MudCardHeader>
+                            <MudText Typo="Typo.subtitle1" Class="font-weight-bold">Order Items</MudText>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            @if (_order.OrderItems == null || !_order.OrderItems.Any())
+                            {
+                                <MudText Typo="Typo.body2">No items found for this order.</MudText>
+                            }
+                            else
+                            {
+                                <MudTable Items="@_order.OrderItems" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
+                                    <HeaderContent>
+                                        <MudTh>PRODUCT</MudTh>
+                                        <MudTh>QUANTITY</MudTh>
+                                        <MudTh>PRICE</MudTh>
+                                        <MudTh>TOTAL</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate Context="orderItem">
+                                        <MudTd DataLabel="Product">@orderItem.Product?.Name</MudTd>
+                                        <MudTd DataLabel="Quantity">@orderItem.Quantity</MudTd>
+                                        <MudTd DataLabel="Price">@orderItem.UnitPrice.ToString("C2", _kes)</MudTd>
+                                        <MudTd DataLabel="Total">@((orderItem.Quantity * orderItem.UnitPrice).ToString("C2",
+                                                                                _kes))</MudTd>
+                                    </RowTemplate>
+                                </MudTable>
+                            }
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                @* Order Summary and Status Update *@
+                <MudItem xs="12">
+                    <MudCard Elevation="0" Outlined="true">
+                        <MudCardHeader>
+                            <MudText Typo="Typo.subtitle1" Class="font-weight-bold">Order Summary</MudText>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudText Typo="Typo.body2"><b>Order Date:</b> @_order.OrderDate.ToString("dd MMM yyyy HH:mm")
+                            </MudText>
+                            <MudText Typo="Typo.body2"><b>Delivery Fees:</b> @_order.DeliveryFees.ToString("C2", _kes)
+                            </MudText>
+                            <MudText Typo="Typo.h6" Class="mt-2"><b>Total Amount:</b> @_order.TotalAmount.ToString("C2",
+                                                            _kes)</MudText>
+
+                        <MudDivider Class="my-4" />
+
+                            <MudSelect T="string" Label="Update Status" Variant="Variant.Outlined"
+                                @bind-Value="_selectedStatus" Dense="true" Class="mt-4">
+                            @foreach (var status in _allPossibleStatuses)
+                                {
+                                    <MudSelectItem Value="@status">@status</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Close</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="UpdateOrderStatus" Disabled="@_isUpdating">
+            @(_isUpdating ? "Updating..." : "Update Status")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public Guid OrderId { get; set; }
+
+    private Order? _order;
+    private bool _isLoading = true;
+    private bool _isUpdating = false;
+    private string? _selectedStatus;
+
+    private List<string> _allPossibleStatuses = new()
+{
+"Pending", "Processing", "Shipped", "Delivered", "Cancelled", "Returned"
+};
+
+    private static readonly System.Globalization.CultureInfo _kes = new System.Globalization.CultureInfo("en-KE");
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine($"OrderDetailsDialog: OnInitializedAsync - MudDialog is {(MudDialog == null ? "NULL" : "NOT NULL")}");
+        await LoadOrderDetails();
+        await base.OnInitializedAsync();
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+       await base.OnAfterRenderAsync(firstRender);
+        if (firstRender)
+        {
+            Console.WriteLine($"OrderDetailsDialog: OnAfterRenderAsync (firstRender) - MudDialog is {(MudDialog == null ? "NULL" : "NOT NULL")}");
+        }
+    }
+
+    private async Task LoadOrderDetails()
+    {
+        _isLoading = true;
+        using (var context = await DbFactory.CreateDbContextAsync())
+        {
+            try
+            {
+                _order = await context.Orders
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
+                .Include(o => o.CustomerAddress)
+                .Include(o => o.DeliveryDetails)
+                .FirstOrDefaultAsync(o => o.Id == OrderId);
+
+                if (_order != null)
+                {
+                    _selectedStatus = _order.Status;
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error loading order details: {ex.Message}", Severity.Error);
+                Console.WriteLine($"Error loading order details: {ex.Message}");
+            }
+            finally
+            {
+                _isLoading = false;
+            }
+        }
+    }
+private async Task UpdateOrderStatus()
+{
+    if (_order == null)
+    {
+        Snackbar.Add("Order not loaded.", Severity.Error); 
+        return;
+    }
+
+    if (string.IsNullOrWhiteSpace(_selectedStatus))
+    {
+        Snackbar.Add("Please select a status to update.", Severity.Warning);
+        return;
+    }
+
+    if (_selectedStatus == _order.Status)
+    {
+        Snackbar.Add("No status change detected.", Severity.Info);
+        return;
+    }
+
+    _isUpdating = true;
+    try 
+    {
+        using (var context = await DbFactory.CreateDbContextAsync())
+        {
+            var orderToUpdate = await context.Orders.FindAsync(_order.Id);
+
+            if (orderToUpdate == null)
+            {
+                Snackbar.Add("Order not found in database.", Severity.Error);
+                return; 
+            }
+            if (orderToUpdate.Status == "Delivered" || orderToUpdate.Status == "Cancelled")
+            {
+                Snackbar.Add($"Status cannot be updated for orders that are '{orderToUpdate.Status}'.", Severity.Error);
+                return; 
+            }
+
+            orderToUpdate.Status = _selectedStatus;
+            await context.SaveChangesAsync();
+
+            Snackbar.Add($"Order status updated to '{_selectedStatus}' successfully!", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+    catch (Exception ex)
+    {
+        Snackbar.Add($"Error updating order status: {ex.Message}", Severity.Error);
+        Console.WriteLine($"Error updating order status: {ex.Message}");
+    }
+    finally
+    {
+        _isUpdating = false;
+        // If this component is a dialog and you're closing it, StateHasChanged() might not be needed
+        // but it's good practice to ensure UI updates if _isUpdating affects other parts of the dialog
+        // StateHasChanged();
+    }
+}
+
+    private void Cancel()
+    {
+        if(MudDialog != null)
+        {
+            MudDialog.Close(DialogResult.Cancel());
+        }else
+        {
+            Console.WriteLine("Error: MudDialog instance is null in Cancel method.");
+            Snackbar.Add("Failed to close dialog. Please refresh the page.", Severity.Error);
+        }
+    }
+}

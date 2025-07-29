@@ -1,0 +1,80 @@
+@using TestP.Models
+@using TestP.Services
+@inject CartService cartService
+
+<MudCard Class="mb-4">
+    <MudGrid Class="px-4 py-2">
+        <MudItem xs="2" sm="1" md="1">
+            <MudImage Src="@Item.ProductImageUrl" Alt="@Item.ProductName" Fluid="true"
+                Style="max-height: 80px; object-fit: contain;" />
+        </MudItem>
+        <MudItem xs="10" sm="7" md="7">
+            <MudText Typo="Typo.h6">@Item.ProductName</MudText>
+            <MudText Typo="Typo.body2">@Item.Product?.Brand</MudText>
+            <MudLink OnClick="RemoveItem" Color="Color.Error">Remove</MudLink>
+        </MudItem>
+        <MudItem xs="12" sm="4" md="4" Class="d-flex justify-sm-end align-center">
+            <MudText Typo="Typo.h6" Class="mr-4">KSh @Item.TotalPrice.ToString("N0")</MudText>
+            <MudButtonGroup>
+                <MudButton OnClick="DecrementQuantity" Disabled="_isUpdatingQuant">-</MudButton>
+                <MudButton Class="text-bold" Disabled="true">@Item.Quantity</MudButton>
+                <MudButton OnClick="IncrementQuantity" Disabled="_isUpdatingQuant">+</MudButton>
+            </MudButtonGroup>
+        </MudItem>
+    </MudGrid>
+</MudCard>
+
+@code {
+    [Parameter]
+    public CartItem Item { get; set; } = new CartItem();
+    private bool _isUpdatingQuant = false;
+    private Guid CartItemId => Item.Id;
+
+    private async Task IncrementQuantity()
+    {
+        _isUpdatingQuant = true;
+        try
+        {
+            await cartService.UpdateCartItemQuantity(CartItemId, Item.Quantity + 1);
+
+        }
+        finally
+        {
+            _isUpdatingQuant = false;
+        }
+    }
+
+    private async Task DecrementQuantity()
+    {
+        _isUpdatingQuant = true;
+        try
+        {
+            if (Item.Quantity > 1)
+            {
+                await cartService.UpdateCartItemQuantity(CartItemId, Item.Quantity - 1);
+            }
+            else
+            {
+                await cartService.RemoveFromCart(CartItemId);
+            }
+        }
+        finally
+        {
+            _isUpdatingQuant = false;
+
+        }
+    }
+
+    private async Task RemoveItem()
+    {
+        _isUpdatingQuant = true;
+        try
+        {
+            await cartService.RemoveFromCart(CartItemId);
+        }
+        finally
+        {
+            _isUpdatingQuant = false;
+        }
+    }
+}

@@ -1,0 +1,134 @@
+@page "/shipping-delivery"
+
+@using MudBlazor
+
+<PageTitle>Shipping & Delivery - eShop</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-8">
+    <MudGrid Justify="Justify.Center" Spacing="4">
+
+        @* Page Header *@
+        <MudItem xs="12" Class="text-center">
+            <MudText Typo="Typo.h3" Color="Color.Dark" Class="mb-4">Shipping & Delivery</MudText>
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="mud-text-secondary mb-6">
+                Everything you need to know about getting your eShop order to your doorstep.
+            </MudText>
+            <MudDivider Class="my-8" />
+        </MudItem>
+
+        @* General Overview *@
+        <MudItem xs="12">
+            <MudPaper Elevation="1" Class="pa-6 rounded-lg">
+                <MudText Typo="Typo.h6" Class="mb-3">Our Commitment to Timely Delivery</MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                    At eShop, we strive to process and ship your orders as quickly and efficiently as possible. We partner with reliable carriers to ensure your products arrive safely and on time. Please read below for detailed information regarding our shipping methods, costs, and delivery estimates.
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        @* Shipping Methods & Costs *@
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="1" Class="pa-6 rounded-lg">
+                <MudText Typo="Typo.h6" Class="mb-3"><MudIcon Icon="@Icons.Material.Filled.LocalShipping" Class="mr-2" />Shipping Methods & Costs</MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary mb-4">
+                    We offer various shipping options to meet your needs. Costs are calculated based on your order total and chosen shipping speed.
+                </MudText>
+
+                <MudTable Items="@shippingOptions" T="ShippingOption" Class="mt-4">
+                    <HeaderContent>
+                        <MudTh>Method</MudTh>
+                        <MudTh>Cost</MudTh>
+                        <MudTh>Estimated Delivery</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Method">w</MudTd>
+                        <MudTd DataLabel="Cost">
+                            @* @if ()
+                            {
+                                <MudText>Free</MudText>
+                            }
+                            else
+                            {
+                                <MudText>KES </MudText>
+                            } *@
+                        </MudTd>
+                        <MudTd DataLabel="Estimated Delivery">21</MudTd>
+                    </RowTemplate>
+                </MudTable>
+                <MudText Typo="Typo.caption" Class="mt-2 mud-text-secondary">
+                    *Costs are examples based on "Site Settings" and may vary based on location or promotions.
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        @* Order Tracking *@
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="1" Class="pa-6 rounded-lg">
+                <MudText Typo="Typo.h6" Class="mb-3"><MudIcon Icon="@Icons.Material.Filled.TrackChanges" Class="mr-2" />Order Tracking</MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary mb-4">
+                    Once your order has been dispatched, you will receive a shipping confirmation email containing a tracking number and a link to track your package's journey. You can also log in to your account and view your order history for tracking details.
+                </MudText>
+                <MudButton Href="/user-orders" Variant="Variant.Outlined" Color="Color.Primary" EndIcon="@Icons.Material.Filled.Search">
+                    Track Your Order
+                </MudButton>
+            </MudPaper>
+        </MudItem>
+
+        @* International Shipping *@
+        <MudItem xs="12">
+            <MudPaper Elevation="1" Class="pa-6 rounded-lg">
+                <MudText Typo="Typo.h6" Class="mb-3"><MudIcon Icon="@Icons.Material.Filled.Public" Class="mr-2" />International Shipping</MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                    We offer international shipping to a selection of countries. International shipping costs and delivery times vary significantly based on the destination and customs procedures. Any customs duties or taxes levied by the destination country are the responsibility of the recipient. Please refer to our FAQ or contact support for international shipping inquiries.
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        @* Important Notes / Restrictions *@
+        <MudItem xs="12">
+            <MudPaper Elevation="1" Class="pa-6 rounded-lg">
+                <MudText Typo="Typo.h6" Class="mb-3"><MudIcon Icon="@Icons.Material.Filled.Info" Class="mr-2" />Important Notes & Restrictions</MudText>
+                <MudList T="string" Class="mud-text-secondary">
+                    <MudListItem Icon="@Icons.Material.Filled.FiberManualRecord" IconColor="Color.Dark">
+                        Delivery times are estimates and may vary due to unforeseen circumstances like weather conditions, customs delays, or peak seasons.
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.FiberManualRecord" IconColor="Color.Dark">
+                        We do not ship to P.O. Boxes or APO/FPO addresses. A physical address is required for all deliveries.
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.FiberManualRecord" IconColor="Color.Dark">
+                        Please ensure your shipping address is accurate and complete at the time of order to avoid delays.
+                    </MudListItem>
+                </MudList>
+            </MudPaper>
+        </MudItem>
+
+        @* Returns & Refunds Link (referencing the "Return Cycle" image) *@
+        <MudItem xs="12" Class="text-center mt-8">
+            <MudText Typo="Typo.h5" Class="mb-4">Need to return an item?</MudText>
+            <MudText Typo="Typo.body1" Class="mud-text-secondary mb-4">
+                Understand our full return process, including our 3-day drop-off window and quality check procedures.
+            </MudText>
+            <MudButton Href="/returns-refunds" Variant="Variant.Filled" Color="Color.Tertiary" Size="Size.Large" EndIcon="@Icons.Material.Filled.AssignmentReturn">
+                View Return & Refund Policy
+            </MudButton>
+        </MudItem>
+
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private List<ShippingOption> shippingOptions = new List<ShippingOption>
+    {
+        new ShippingOption { Method = "Standard Shipping", Cost = 5.00m, DeliveryTime = "5-7 Business Days" },
+        new ShippingOption { Method = "Express Shipping", Cost = 15.00m, DeliveryTime = "2-3 Business Days" },
+        new ShippingOption { Method = "Free Shipping (on orders over KES 10000)", Cost = 0.00m, DeliveryTime = "5-7 Business Days" }
+    };
+
+    // This nested class represents a simple model for our shipping options.
+    private class ShippingOption
+    {
+        public string Method { get; set; } = string.Empty;
+        public decimal Cost { get; set; }
+        public string DeliveryTime { get; set; } = string.Empty;
+    }
+}

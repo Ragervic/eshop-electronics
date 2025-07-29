@@ -1,0 +1,36 @@
+﻿@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+
+<MudNavMenu Color="Color.Secondary" Class="mt-4">
+    <AuthorizeView Roles="Customer">
+        <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+        <MudNavLink Href="cart" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">Cart</MudNavLink>
+        <MudNavLink Href="user-orders" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.BookmarkBorder">Your
+            Orders
+        </MudNavLink>
+    </AuthorizeView>
+
+    <AuthorizeView Roles="Admin">
+        <MudNavLink Href="/admin-dashboard" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.Dashboard">Dashboard
+        </MudNavLink>
+
+        @* <MudNavGroup Title="User Management" Icon="@Icons.Material.Filled.ManageAccounts">
+            <MudNavLink Href="/users" Icon="@Icons.Material.Filled.SupervisedUserCircle">Admin</MudNavLink>
+            <MudNavLink Href="/roles" Icon="@Icons.Material.Filled.VerifiedUser">Customers</MudNavLink>
+        </MudNavGroup> *@
+
+        <MudNavGroup Title="Product Management" Icon="@Icons.Material.Filled.ElectricMoped">
+            <MudNavLink Href="/products" Icon="@Icons.Material.Filled.ProductionQuantityLimits">Products</MudNavLink>
+            <MudNavLink Href="/categories" Icon="@Icons.Material.Filled.Category">Categories</MudNavLink>
+        </MudNavGroup>
+        <MudNavLink Href="/admin-orders" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.BookmarkBorder">Orders
+        </MudNavLink>
+        <MudNavLink Href="/sales" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PointOfSale">Sales
+        </MudNavLink>
+        <MudNavLink Href="/reports" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Report">Reports
+        </MudNavLink>
+        <MudSpacer />
+        <MudNavLink Href="/settings" Icon="@Icons.Material.Filled.Settings">Settings</MudNavLink>
+        @* <MudSpacer /> *@
+    </AuthorizeView>
+</MudNavMenu>

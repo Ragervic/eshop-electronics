@@ -1,0 +1,117 @@
+@page "/about"
+
+@using MudBlazor
+
+<PageTitle>About Us - eShop</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-8">
+    <MudGrid Justify="Justify.Center" Spacing="4">
+        @* Hero Section *@
+        <MudItem xs="12" Class="text-center">
+            <MudText Typo="Typo.h3" Color="Color.Dark" Class="mb-4">Welcome to eShop</MudText>
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="mud-text-secondary mb-6">
+                Your trusted destination for the latest and greatest in electronics.
+            </MudText>
+            <MudButton Href="/products" Variant="Variant.Filled" Color="Color.Secondary" Size="Size.Large"
+                EndIcon="@Icons.Material.Filled.ArrowForward">
+                Explore Our Products
+            </MudButton>
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudDivider Class="my-8" />
+        </MudItem>
+
+        @* Our Story Section *@
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="0" Class="pa-4 text-center">
+                <MudIcon Icon="@Icons.Material.Filled.Store" Size="Size.Large" Color="Color.Tertiary" Class="mb-4" />
+                <MudText Typo="Typo.h6" Class="mb-3">Our Story</MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                    Founded in [Year, e.g., 2020], eShop started with a simple vision: to make cutting-edge electronics
+                    accessible to everyone. What began as a small venture driven by passion has grown into a thriving
+                    online store, serving tech enthusiasts and everyday users alike. We believe in the power of
+                    technology to enhance lives, and our journey is fueled by a commitment to bring you the best.
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudImage Src="https://placehold.co/600x400/E0F2F7/263238?text=Our+Story" Alt="Our Story" Fluid="true"
+                Class="rounded-lg shadow-sm" Style="object-fit: cover;" />
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudDivider Class="my-8" />
+        </MudItem>
+
+        @* Our Mission Section *@
+        <MudItem xs="12" md="6" Class="order-md-2"> @* order-md-2 to swap image and text on medium+ screens *@
+            <MudPaper Elevation="0" Class="pa-4 text-center">
+                <MudIcon Icon="@Icons.Material.Filled.RocketLaunch" Size="Size.Large" Color="Color.Tertiary"
+                    Class="mb-4" />
+                <MudText Typo="Typo.h6" Class="mb-3">Our Mission</MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                    Our mission is to be the leading online retailer for electronics, providing an unparalleled shopping
+                    experience through a curated selection of high-quality products, competitive pricing, and
+                    exceptional customer service. We aim to empower our customers with the tools they need to connect,
+                    create, and innovate.
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="6" Class="order-md-1"> @* order-md-1 to swap image and text on medium+ screens *@
+            <MudImage Src="https://placehold.co/600x400/E0F2F7/263238?text=Our+Mission" Alt="Our Mission" Fluid="true"
+                Class="rounded-lg shadow-sm" Style="object-fit: cover;" />
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudDivider Class="my-8" />
+        </MudItem>
+
+        @* Why Choose Us Section *@
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4" Class="text-center mb-6" Color="Color.Primary">Why Choose eShop?</MudText>
+        </MudItem>
+
+        <MudItem xs="12" sm="4" Class="text-center">
+            <MudPaper Elevation="2" Class="pa-6 rounded-xl">
+                <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Large" Color="Color.Success" Class="mb-3" />
+                <MudText Typo="Typo.h6" Class="mb-2">Quality Assurance</MudText>
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                    Every product is rigorously tested and sourced from reputable manufacturers.
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="4" Class="text-center">
+            <MudPaper Elevation="2" Class="pa-6 rounded-xl">
+                <MudIcon Icon="@Icons.Material.Filled.SupportAgent" Size="Size.Large" Color="Color.Info" Class="mb-3" />
+                <MudText Typo="Typo.h6" Class="mb-2">Dedicated Support</MudText>
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                    Our friendly customer service team is here to assist you 24/7.
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="4" Class="text-center">
+            <MudPaper Elevation="2" Class="pa-6 rounded-xl">
+                <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Size="Size.Large" Color="Color.Warning"
+                    Class="mb-3" />
+                <MudText Typo="Typo.h6" Class="mb-2">Fast & Reliable Delivery</MudText>
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                    Get your gadgets delivered quickly and securely to your doorstep.
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" Class="text-center mt-8">
+            <MudText Typo="Typo.h5" Class="mb-4">Ready to upgrade your tech?</MudText>
+            <MudButton Href="/" Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Large"
+                EndIcon="@Icons.Material.Filled.ShoppingCart">
+                Shop Now
+            </MudButton>
+        </MudItem>
+
+    </MudGrid>
+</MudContainer>
