@@ -52,7 +52,8 @@
                     </MudButton>
                 </MudCardContent>
                 <MudCardActions>
-                    <MudText Typo="Typo.body2" Class="px-4 py-2">Returns are easy <MudLink Href="#">Free return within 7
+                    <MudText Typo="Typo.body2" Class="px-4 py-2">Returns are easy <MudLink Href="/returns-refunds">Free
+                            return within 7
                             days </MudLink>
                     </MudText>
                 </MudCardActions>
@@ -127,8 +128,6 @@
     }
     private void Cart_changed()
     {
-        // This method can be used to handle any additional logic when the cart changes
-        // For example, you might want to log the change or update some other state
         InvokeAsync(StateHasChanged);
     }
 

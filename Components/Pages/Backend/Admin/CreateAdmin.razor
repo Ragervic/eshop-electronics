@@ -96,10 +96,10 @@
     private async Task CreateNewUser()
     {
         var user = CreateApplicationUser();
-
-        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
         var emailStore = GetEmailStore();
+
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
 
         var result = await UserManager.CreateAsync(user, Input.Password);
 
@@ -112,8 +112,6 @@
 
         Logger.LogInformation("Admin created a new account for {Email}.", Input.Email);
         
-
-        // Assign the selected role
         if (!string.IsNullOrEmpty(Input.SelectedRole))
         {
             var roleResult = await UserManager.AddToRoleAsync(user, Input.SelectedRole);
@@ -137,7 +135,7 @@
 
          @* Optionally send email confirmation link (if desired for admin-created users) *@
         var userId = await UserManager.GetUserIdAsync(user);
-         var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+        var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
         code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
         var callbackUrl = NavigationManager.GetUriWithQueryParameters(
             NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,

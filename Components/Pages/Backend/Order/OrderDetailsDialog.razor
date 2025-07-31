@@ -162,7 +162,7 @@
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-       await base.OnAfterRenderAsync(firstRender);
+        await base.OnAfterRenderAsync(firstRender);
         if (firstRender)
         {
             Console.WriteLine($"OrderDetailsDialog: OnAfterRenderAsync (firstRender) - MudDialog is {(MudDialog == null ? "NULL" : "NOT NULL")}");
@@ -199,62 +199,60 @@
             }
         }
     }
-private async Task UpdateOrderStatus()
-{
-    if (_order == null)
+    private async Task UpdateOrderStatus()
     {
-        Snackbar.Add("Order not loaded.", Severity.Error); 
-        return;
-    }
-
-    if (string.IsNullOrWhiteSpace(_selectedStatus))
-    {
-        Snackbar.Add("Please select a status to update.", Severity.Warning);
-        return;
-    }
-
-    if (_selectedStatus == _order.Status)
-    {
-        Snackbar.Add("No status change detected.", Severity.Info);
-        return;
-    }
-
-    _isUpdating = true;
-    try 
-    {
-        using (var context = await DbFactory.CreateDbContextAsync())
+        if (_order == null)
         {
-            var orderToUpdate = await context.Orders.FindAsync(_order.Id);
-
-            if (orderToUpdate == null)
-            {
-                Snackbar.Add("Order not found in database.", Severity.Error);
-                return; 
-            }
-            if (orderToUpdate.Status == "Delivered" || orderToUpdate.Status == "Cancelled")
-            {
-                Snackbar.Add($"Status cannot be updated for orders that are '{orderToUpdate.Status}'.", Severity.Error);
-                return; 
-            }
-
-            orderToUpdate.Status = _selectedStatus;
-            await context.SaveChangesAsync();
-
-            Snackbar.Add($"Order status updated to '{_selectedStatus}' successfully!", Severity.Success);
-            MudDialog.Close(DialogResult.Ok(true));
+            Snackbar.Add("Order not loaded.", Severity.Error); 
+            return;
         }
-    }
-    catch (Exception ex)
-    {
-        Snackbar.Add($"Error updating order status: {ex.Message}", Severity.Error);
-        Console.WriteLine($"Error updating order status: {ex.Message}");
-    }
-    finally
-    {
-        _isUpdating = false;
-        // If this component is a dialog and you're closing it, StateHasChanged() might not be needed
-        // but it's good practice to ensure UI updates if _isUpdating affects other parts of the dialog
-        // StateHasChanged();
+
+        if (string.IsNullOrWhiteSpace(_selectedStatus))
+        {
+            Snackbar.Add("Please select a status to update.", Severity.Warning);
+            return;
+        }
+
+        if (_selectedStatus == _order.Status)
+        {
+            Snackbar.Add("No status change detected.", Severity.Info);
+            return;
+        }
+
+        _isUpdating = true;
+        try 
+        {
+            using (var context = await DbFactory.CreateDbContextAsync())
+            {
+                var orderToUpdate = await context.Orders.FindAsync(_order.Id);
+
+                if (orderToUpdate == null)
+                {
+                    Snackbar.Add("Order not found in database.", Severity.Error);
+                    return; 
+                }
+                if (orderToUpdate.Status == "Delivered" || orderToUpdate.Status == "Cancelled")
+                {
+                    Snackbar.Add($"Status cannot be updated for orders that are '{orderToUpdate.Status}'.", Severity.Error);
+                    return; 
+                }
+
+                orderToUpdate.Status = _selectedStatus;
+                await context.SaveChangesAsync();
+
+                Snackbar.Add($"Order status updated to '{_selectedStatus}' successfully!", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error updating order status: {ex.Message}", Severity.Error);
+            Console.WriteLine($"Error updating order status: {ex.Message}");
+        }
+        finally
+        {
+            _isUpdating = false;
+            StateHasChanged();
     }
 }
 

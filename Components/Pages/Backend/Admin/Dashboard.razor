@@ -151,7 +151,7 @@
                             <MudTh>DELIVERY METHOD</MudTh>
                         </HeaderContent>
                         <RowTemplate Context="item">
-                            <MudTd DataLabel="Order ID">@item.Id.ToString().Substring(0, 8)</MudTd> @* Shorten ID for display *@
+                            <MudTd DataLabel="Order ID">@item.Id.ToString().Substring(0, 8)</MudTd> @* Shortened ID for display *@
                             <MudTd DataLabel="Customer">@item.CustomerAddress?.FullName</MudTd>
                             <MudTd DataLabel="Amount">@item.TotalAmount.ToString("C2")</MudTd>
                             <MudTd DataLabel="Status">
@@ -299,20 +299,19 @@ Data = _revenueData.Select(rd => (double)rd.Revenue).ToArray()
             }
         }
     }
-    // Initialize chart options here (OnInitializedAsync is better for this than OnAfterRenderAsync)
     protected override Task OnInitializedAsync()
     {
         // Revenue Trends Chart Options
         _revenueChartOptions = new ChartOptions
         {
             InterpolationOption = InterpolationOption.NaturalSpline,
-            YAxisFormat = "c", // Currency format (e.g., $1,000.00)
+            YAxisFormat = "c", 
             YAxisTicks = 5,
             XAxisLines = true,
             YAxisLines = true,
             LineStrokeWidth = 2,
             ShowLegend = true,
-            ChartPalette = new[] { Colors.Blue.Lighten1 } // Single color for the line
+            ChartPalette = new[] { Colors.Blue.Lighten1 }
         };
 
         // Orders by Category Chart Options (Donut Chart)

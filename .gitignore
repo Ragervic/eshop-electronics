@@ -2,3 +2,117 @@ bin/
 obj/
 
 
+# Visual Studio / .NET Core
+.vs/
+*.vspscc
+*.vssscc
+*.bak
+*.scc
+
+# Build results
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+*.exe
+*.pdb
+*.dll
+*.suo
+*.user
+*.aps
+*.bsc
+*.ilk
+*.log
+*.lib
+*.ncb
+*.res
+*.pch
+*.exp
+*.opt
+*.res
+*.tlb
+*.tlh
+*.tmp
+*.noinherit
+*.sdf
+*.cache
+*.VC.db
+*.opendb
+*.VC.opendb
+
+# NuGet packages
+packages/
+*.nupkg
+.nuget/NuGetScratch/
+
+# Rider
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# Local settings
+*.local
+*.user
+*.cache
+*.obj
+*.ncb
+*.suo
+*.aps
+*.log
+*.vspscc
+*.vssscc
+*.buildlog
+[Bb]uildLog.htm
+[Bb]uildLog.html
+
+# Other common generated files
+Generated_Code/
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Unit test results
+*.trx
+*.testrunconfig
+*.coverage
+*.coveragexml
+*.runsettings
+
+# Azure / Cloud specific files
+*.publishsettings
+*.cscfg
+*.wadcfg
+*.scmpostdeploy.xml
+Generated_Packages/
+
+# User secrets (if not already handled by .vs/ or explicitly ignored)
+appsettings.Development.json
+appsettings.Production.json
+# Or more specifically if you use user secrets directly in source control (not recommended)
+# This is often managed outside of source control, e.g., for local development
+# Do NOT commit sensitive keys directly. Use user secrets or environment variables.
+# For actual user secrets, they usually live outside the repo, but if they get created in the project dir:
+# appsettings.Development.json # If you're using this for secrets
+# appsettings.Production.json # If you're using this for secrets
+# It's better to manage these outside of source control or use proper secret management.
+
+# Content for Blazor Wasm Debugging
+# If you find issues with hot reload or debugging for client-side Blazor,
+# sometimes specific entries might interfere. The below are usually fine.
+# But if you experience problems, uncommenting these might help, though
+# generally not recommended as they are part of typical build output.
+# wwwroot/
+#   _framework/
+#   _content/
+
+# node_modules and npm specific files (if you use JavaScript build tools)
+node_modules/
+npm-debug.log
+yarn-error.log
+.pnpm-store/
+
+# Dotnet tool local tools folder
+.config/dotnet-tools.json
+.config/dotnet-tools.local.json

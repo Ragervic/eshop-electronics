@@ -73,7 +73,8 @@ else
                 <MudText Typo="Typo.h6" Class="mt-4 mb-2">Product Image</MudText>
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                     <InputFile OnChange="HandleFileSelection" id="fileInput" hidden />
-                    <MudButton HtmlTag="label" For="fileInput" Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.CloudUpload">
+                    <MudButton HtmlTag="label" For="fileInput" Variant="Variant.Filled" Color="Color.Secondary"
+                        StartIcon="@Icons.Material.Filled.CloudUpload">
                         Browse File
                     </MudButton>
                     @if (_selectedFileName != null)
@@ -84,15 +85,18 @@ else
 
                 @if (_uploadedImageUrl != null)
                 {
-                    <MudImage Src="@_uploadedImageUrl" Alt="Product Preview" Width="200" Class="mt-3 rounded-lg" Style="object-fit: contain;" />
+                    <MudImage Src="@_uploadedImageUrl" Alt="Product Preview" Width="200" Class="mt-3 rounded-lg"
+                        Style="object-fit: contain;" />
                 }
                 else if (!string.IsNullOrEmpty(product.ImageUrl) && product.ImageUrl != "images/placeholder.png")
                 {
-                    <MudImage Src="@product.ImageUrl" Alt="Current Image" Width="200" Class="mt-3 rounded-lg" Style="object-fit: contain;" />
+                    <MudImage Src="@product.ImageUrl" Alt="Current Image" Width="200" Class="mt-3 rounded-lg"
+                        Style="object-fit: contain;" />
                 }
                 else
                 {
-                    <MudImage Src="images/placeholder.png" Alt="No Image" Width="200" Class="mt-3 rounded-lg mud-border-grey-lighten2" Style="object-fit: contain;" />
+                    <MudImage Src="images/placeholder.png" Alt="No Image" Width="200"
+                        Class="mt-3 rounded-lg mud-border-grey-lighten2" Style="object-fit: contain;" />
                 }
 
                 @if (_isUploading)
@@ -200,7 +204,7 @@ else
         if (_selectedFile == null)
         {
             Snackbar.Add("No file selected.", Severity.Warning);
-            product.ImageUrl = "images/placeholder.png";
+            product!.ImageUrl = "images/placeholder.png";
             return;
         }
 
@@ -209,7 +213,7 @@ else
             Snackbar.Add($"File size exceeds the limit of {MAX_FILE_SIZE / (1024 * 1024)}MB.", Severity.Error);
             _selectedFile = null;
             _selectedFileName = null;
-            product.ImageUrl = "images/placeholder.png";
+            product!.ImageUrl = "images/placeholder.png";
             return;
         }
 
@@ -233,7 +237,7 @@ else
                     await stream.CopyToAsync(fileStream);
                 }
             }
-            product.ImageUrl = Path.Combine("images", "products", uniqueFileName).Replace("\\", "/");
+            product!.ImageUrl = Path.Combine("images", "products", uniqueFileName).Replace("\\", "/");
             _uploadedImageUrl = product.ImageUrl;
             Snackbar.Add($"Image '{_selectedFile.Name}' uploaded successfully!", Severity.Success);
         }
@@ -241,7 +245,7 @@ else
         {
             Snackbar.Add($"An error occurred during image upload: {ex.Message}", Severity.Error);
             Console.WriteLine($"File upload error: {ex.Message}");
-            product.ImageUrl = "images/placeholder.png";
+            product!.ImageUrl = "images/placeholder.png";
             _uploadedImageUrl = null;
         }
         finally

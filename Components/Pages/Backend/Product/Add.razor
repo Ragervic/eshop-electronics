@@ -29,7 +29,7 @@
         </MudPaper>
 <MudPaper Class="pa-4">
     <MudCard>
-        <MudForm Model="@product" @ref="form" EnableValidation="true">
+        <MudForm Model="@product" @ref="form">
 
             <MudGrid Spacing="3">
                 <MudItem xs="12" sm="6">
@@ -124,7 +124,7 @@
 
             <div class="d-flex justify-content-end mt-6">
                 <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mr-2"
-                           OnClick="AddProduct" Disabled="_isUploading"> @* Disable button while uploading *@
+                        OnClick="AddProduct" Disabled="_isUploading"> 
                     Add Product
                 </MudButton>
                 <MudButton Variant="Variant.Text" OnClick="GoBack">
@@ -170,13 +170,13 @@
     private async Task HandleFileSelection(InputFileChangeEventArgs e)
     {
         _selectedFile = e.File;
-        _selectedFileName = _selectedFile?.Name; // Use null-conditional operator
-        _uploadedImageUrl = null; // Clear previous preview if a new file is selected
+        _selectedFileName = _selectedFile?.Name; 
+        _uploadedImageUrl = null; 
 
         if (_selectedFile == null)
         {
             Snackbar.Add("No file selected.", Severity.Warning);
-            product.ImageUrl = "images/placeholder.png"; // Reset image URL if no file
+            product.ImageUrl = "images/placeholder.png";
             return;
         }
 
@@ -185,12 +185,12 @@
             Snackbar.Add($"File size exceeds the limit of {MAX_FILE_SIZE / (1024 * 1024)}MB.", Severity.Error);
             _selectedFile = null;
             _selectedFileName = null;
-            product.ImageUrl = "images/placeholder.png"; // Reset image URL if file too large
+            product.ImageUrl = "images/placeholder.png";
             return;
         }
 
         _isUploading = true;
-        StateHasChanged(); // Update UI to show loading indicator
+        StateHasChanged();
 
         try
         {
@@ -198,7 +198,6 @@
             // This path should be accessible by your web server (e.g., wwwroot/images/products)
             var uploadsPath = Path.Combine(WebHostEnvironment.WebRootPath, "images", "products");
 
-            // Ensure the directory exists
             if (!Directory.Exists(uploadsPath))
             {
                 Directory.CreateDirectory(uploadsPath);
@@ -223,7 +222,7 @@
             // Update the product.ImageUrl with the relative path for web access
             // Use Replace("\\", "/") to ensure correct URL format for web access
             product.ImageUrl = Path.Combine("images", "products", uniqueFileName).Replace("\\", "/");
-            _uploadedImageUrl = product.ImageUrl; // Set for preview
+            _uploadedImageUrl = product.ImageUrl; 
 
             Snackbar.Add($"Image '{_selectedFile.Name}' uploaded successfully!", Severity.Success);
         }
@@ -231,14 +230,14 @@
         {
             Snackbar.Add($"An error occurred during image upload: {ex.Message}", Severity.Error);
             Console.WriteLine($"File upload error: {ex.Message}");
-            product.ImageUrl = "images/placeholder.png"; // Revert to placeholder on error
+            product.ImageUrl = "images/placeholder.png";
             _uploadedImageUrl = null;
         }
         finally
         {
-            _isUploading = false; // Stop loading indicator
-            _selectedFile = null; // Clear selected file after processing
-            StateHasChanged(); // Update UI after upload
+            _isUploading = false; 
+            _selectedFile = null; 
+            StateHasChanged(); 
         }
     }
 
@@ -247,14 +246,13 @@
     {
         await form!.Validate();
 
-        // Ensure an image has been uploaded and its URL is set
         if (string.IsNullOrEmpty(product.ImageUrl) || product.ImageUrl == "images/placeholder.png")
         {
             Snackbar.Add("Please upload a product image.", Severity.Warning);
-            return; // Prevent saving if image is missing
+            return; 
         }
 
-        if (form.IsValid && !_isUploading) // Ensure no upload is in progress
+        if (form.IsValid && !_isUploading) 
         {
             var dbContext = DbFactory.CreateDbContext();
             try
@@ -263,9 +261,6 @@
                 await dbContext.SaveChangesAsync();
 
                 Snackbar.Add("Product added successfully!", Severity.Success);
-
-                // No need for StateHasChanged() and Task.Delay(100) before navigation
-                // as NavigationManager.NavigateTo handles UI updates implicitly.
                 NavigationManager.NavigateTo("/products", forceLoad: true);
             }
             catch (Exception ex)
@@ -278,14 +273,8 @@
         {
             Snackbar.Add("Please correct the form errors.", Severity.Warning);
         }
-        // If _isUploading is true, the user needs to wait for the upload to finish.
+        
     }
-
-    // REMOVED: Helper class to deserialize the upload response (not needed for direct System.IO)
-    // private class UploadResult
-    // {
-    //     public string? ImageUrl { get; set; }
-    // }
 
     private void GoBack()
     {

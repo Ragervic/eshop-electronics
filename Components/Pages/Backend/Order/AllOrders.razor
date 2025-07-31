@@ -1,4 +1,5 @@
 @page "/admin-orders"
+
 @layout AdminLayout
 @using TestP.Components.Layout
 @rendermode InteractiveServer
@@ -57,7 +58,7 @@
             </MudGrid>
 
 
-            @if (_isLoading && !_currentOrdersPage.Any()) // Only show global loader if no data is present yet
+            @if (_isLoading && !_currentOrdersPage.Any())
             {
                 <MudProgressLinear Indeterminate="true" Class="my-4" />
                 <MudText Typo="Typo.body1">Loading orders...</MudText>
@@ -70,11 +71,11 @@
                       RowsPerPage="25" Dense="true" Hover="true">
                 <HeaderContent>
                     <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.Id)">ORDER ID</MudTableSortLabel></MudTh>
-                    <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.CustomerAddress.Email)">CUSTOMER</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.CustomerAddress!.Email!)">CUSTOMER</MudTableSortLabel></MudTh>
                     <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.TotalAmount)">AMOUNT</MudTableSortLabel></MudTh>
-                    <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.Status)">STATUS</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.Status!)">STATUS</MudTableSortLabel></MudTh>
                     <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.OrderDate)">DATE</MudTableSortLabel></MudTh>
-                    <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.DeliveryDetails.DeliveryMethod)">DELIVERY METHOD</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<Order, object>(x=>x.DeliveryDetails!.DeliveryMethod!)">DELIVERY METHOD</MudTableSortLabel></MudTh>
                     <MudTh>ACTIONS</MudTh>
                 </HeaderContent>
                 <RowTemplate Context="item">
@@ -82,7 +83,7 @@
                     <MudTd DataLabel="Customer">@item.CustomerAddress?.Email</MudTd>
                     <MudTd DataLabel="Amount">@item.TotalAmount.ToString("C2",new System.Globalization.CultureInfo("en-KE"))</MudTd>
                     <MudTd DataLabel="Status">
-                        <MudChip T="string" Color="@GetStatusColor(item.Status)">@item.Status</MudChip>
+                        <MudChip T="string" Color="@GetStatusColor(item.Status!)">@item.Status</MudChip>
                     </MudTd>
                     <MudTd DataLabel="Order Date">@item.OrderDate.ToString("dd MMM yyyy HH:mm")</MudTd>
                     <MudTd DataLabel="Delivery Method">@item.DeliveryDetails?.DeliveryMethod</MudTd>
@@ -242,7 +243,7 @@
                         query = state.SortDirection == SortDirection.Descending ? query.OrderByDescending(o => o.Id) : query.OrderBy(o => o.Id);
                         break;
                     case "CUSTOMER":
-                        query = state.SortDirection == SortDirection.Descending ? query.OrderByDescending(o => o.CustomerAddress.Email) : query.OrderBy(o => o.CustomerAddress.Email);
+                        query = state.SortDirection == SortDirection.Descending ? query.OrderByDescending(o => o.CustomerAddress!.Email) : query.OrderBy(o => o.CustomerAddress!.Email);
                         break;
                     case "AMOUNT":
                         query = state.SortDirection == SortDirection.Descending ? query.OrderByDescending(o => o.TotalAmount) : query.OrderBy(o => o.TotalAmount);
@@ -254,7 +255,7 @@
                         query = state.SortDirection == SortDirection.Descending ? query.OrderByDescending(o => o.OrderDate) : query.OrderBy(o => o.OrderDate);
                         break;
                     case "DELIVERY METHOD":
-                        query = state.SortDirection == SortDirection.Descending ? query.OrderByDescending(o => o.DeliveryDetails.DeliveryMethod) : query.OrderBy(o => o.DeliveryDetails.DeliveryMethod);
+                        query = state.SortDirection == SortDirection.Descending ? query.OrderByDescending(o => o.DeliveryDetails!.DeliveryMethod!) : query.OrderBy(o => o.DeliveryDetails!.DeliveryMethod!);
                         break;
                     default:
                         query = query.OrderByDescending(o => o.OrderDate); // Default sort
@@ -297,7 +298,7 @@
         var dialog = await DialogService.ShowAsync<OrderDetailsDialog>("Order Details", parameters, options);
         var result = await dialog.Result;
 
-        if (!result.Canceled && result.Data is bool statusUpdated && statusUpdated)
+        if (!result!.Canceled && result.Data is bool statusUpdated && statusUpdated)
         {
             _ = _mudTable?.ReloadServerData();
         }
@@ -309,7 +310,7 @@
         _startDateField = null;
         _endDateField = null;
         _selectedDeliveryMethodField = null;
-
+        
         _ = _mudTable?.ReloadServerData();
     }
 

@@ -8,7 +8,6 @@
 @using TestP.Services.Analytics
 
 @using MudBlazor.Charts
-@* @using MudBlazor.Charts.Events *@
 @inject ISalesAnalyticsService SalesAnalyticsService
 @inject BreadCrumbService BreadCrumbService
 @inject NavigationManager NavManager
@@ -181,13 +180,13 @@
         _revenueChartOptions = new ChartOptions
         {
             InterpolationOption = InterpolationOption.NaturalSpline,
-            YAxisFormat = "c", // Currency format (e.g., $1,000.00)
+            YAxisFormat = "c",
             YAxisTicks = 5,
             XAxisLines = true,
             YAxisLines = true,
             LineStrokeWidth = 2,
             ShowLegend = true,
-            ChartPalette = new[] { Colors.Blue.Lighten1 } // Single color for the line
+            ChartPalette = new[] { Colors.Blue.Lighten1 }
         };
 
         _pieChartOptions = new ChartOptions
@@ -309,10 +308,8 @@ Data = _revenueData.Select(rd => (double)rd.Revenue).ToArray()
 
     .mud-chart.mud-chart-pie .mud-chart-donut-hole {
         r: 50px !important;
-        /* Adjust this value to control the hole size */
     }
 
-    /* Or more generally if the inner circle just has a standard SVG class/structure */
     .mud-chart svg>circle.some-inner-circle-class {
         r: 50px !important;
     }
