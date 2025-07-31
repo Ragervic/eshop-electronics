@@ -1,15 +1,21 @@
 @page "/privacy"
 
 @using MudBlazor
+@using Microsoft.AspNetCore.Components;
+@using TestP.Models
+@using TestP.Services
+@inject ISiteSettingsService SiteSettingsService
+@inject BreadCrumbService breadCrumbService
 
-<PageTitle>Privacy Policy - eShop</PageTitle>
+
+<PageTitle>Privacy Policy - @_siteConfig?.WebsiteBanner</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-8">
     <MudGrid Justify="Justify.Center" Spacing="4">
         <MudItem xs="12" Class="text-center">
             <MudText Typo="Typo.h3" Color="Color.Dark" Class="mb-4">Privacy Policy</MudText>
             <MudText Typo="Typo.body1" Color="Color.Primary" Class="mud-text-secondary mb-6">
-                Last updated: July 29, 2025
+                Last updated:@_siteConfig.
             </MudText>
             <MudDivider Class="my-8" />
         </MudItem>
@@ -45,7 +51,7 @@
                     <MudListItem Icon="@Icons.Material.Filled.ArrowRight">
                         <MudText Typo="Typo.body1">
                             **Company** (referred to as either "the Company", "We", "Us" or "Our" in this Agreement)
-                            refers to **[Your Company Name Here]**, **[Your Company Address Here]**.
+                            refers to @_siteConfig?.WebsiteBanner, @_siteConfig?.CompanyAddress.
                         </MudText>
                     </MudListItem>
                     <MudListItem Icon="@Icons.Material.Filled.ArrowRight">
@@ -62,8 +68,8 @@
                     </MudListItem>
                     <MudListItem Icon="@Icons.Material.Filled.ArrowRight">
                         <MudText Typo="Typo.body1">
-                            **Website** refers to eShop, accessible from <MudLink Href="https://www.yourwebsite.com"
-                                Target="_blank">https://www.yourwebsite.com</MudLink> (replace with your actual domain).
+                            **Website** refers to @_siteConfig?.WebsiteBanner, accessible from <MudLink Href="/"
+                                Target="_blank">https://www.{@_siteConfig?.WebsiteBanner}.com</MudLink>
                         </MudText>
                     </MudListItem>
                     <MudListItem Icon="@Icons.Material.Filled.ArrowRight">
@@ -258,15 +264,26 @@
                 </MudText>
                 <MudList T="string">
                     <MudListItem Icon="@Icons.Material.Filled.Email">By email: <MudLink
-                            Href="mailto:privacy@yourcompany.com">privacy@yourcompany.com</MudLink>
+                            Href=$"mailto:@_siteConfig?.ContactEmail">@_siteConfig?.ContactEmail</MudLink>
                     </MudListItem>
                     <MudListItem Icon="@Icons.Material.Filled.Phone">By phone number: <MudLink Href="tel:+1234567890">
-                            +1234567890</MudLink>
+                            @_siteConfig?.ContactPhone</MudLink>
                     </MudListItem>
-                    <MudListItem Icon="@Icons.Material.Filled.LocationOn">By mail: [Your Company Address Here]
+                    <MudListItem Icon="@Icons.Material.Filled.LocationOn">By mail: @_siteConfig?.CompanyAddress
                     </MudListItem>
                 </MudList>
             </MudPaper>
         </MudItem>
     </MudGrid>
 </MudContainer>
+
+@code {
+    private SiteConfiguration? _siteConfig;
+    protected override async Task OnInitializedAsync()
+    {
+        breadCrumbService.Clear();
+        breadCrumbService.AddItem("Home", "/");
+        breadCrumbService.AddItem("Privacy Policy", "/privacy");
+        _siteConfig = await SiteSettingsService.GetSiteSettingsAsync();
+    }
+}

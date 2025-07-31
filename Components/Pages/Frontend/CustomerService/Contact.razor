@@ -1,8 +1,13 @@
 @page "/contact"
 
 @using MudBlazor
+@using Microsoft.AspNetCore.Components;
+@using TestP.Models
+@using TestP.Services
+@inject ISiteSettingsService SiteSettingsService
+@inject BreadCrumbService breadCrumbService
 
-<PageTitle>Contact Us - eShop</PageTitle>
+<PageTitle>Contact Us - @_siteConfig?.WebsiteBanner</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-8">
     <MudGrid Justify="Justify.Center" Spacing="4">
@@ -33,7 +38,7 @@
                 <MudText Typo="Typo.h6" Class="mb-2">Email</MudText>
                 <MudText Typo="Typo.body1" Class="mud-text-secondary mb-4">Send us an email anytime.</MudText>
                 <MudText Typo="Typo.h5" Class="mb-2">
-                    <MudLink Href="mailto:support@yourcompany.com">support@yourcompany.com</MudLink>
+                    <MudLink Href=$"mailto:@_siteConfig?.ContactEmail">@_siteConfig?.ContactEmail</MudLink>
                 </MudText>
             </MudPaper>
         </MudItem>
@@ -46,10 +51,10 @@
                 <MudText Typo="Typo.h6" Class="mb-2">Address</MudText>
                 <MudText Typo="Typo.body1" Class="mud-text-secondary mb-4">Visit our office or send us mail.</MudText>
                 <MudText Typo="Typo.h5" Class="mb-2">
-                    [Your Company Name]<br />
-                    [Your Street Address]<br />
-                    [City, State, Zip Code]<br />
-                    [Country]
+                    @_siteConfig?.WebsiteBanner<br />
+                    @_siteConfig?.ContactEmail<br />
+                    @_siteConfig?.CompanyAddress<br />
+                    @_siteConfig?.ContactPhone
                 </MudText>
             </MudPaper>
         </MudItem>
@@ -122,6 +127,14 @@
     private ContactMessage contactMessage = new ContactMessage();
     private MudForm contactForm = new MudForm();
 
+    private SiteConfiguration? _siteConfig;
+    protected override async Task OnInitializedAsync()
+    {
+        breadCrumbService.Clear();
+        breadCrumbService.AddItem("Home", "/");
+        breadCrumbService.AddItem("Contact Us", "/contact");
+        _siteConfig = await SiteSettingsService.GetSiteSettingsAsync();
+    }
     private async Task SubmitContactForm()
     {
         await contactForm.Validate();

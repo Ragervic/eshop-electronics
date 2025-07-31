@@ -1,8 +1,13 @@
 @page "/faq"
 
 @using MudBlazor
+@using Microsoft.AspNetCore.Components;
+@using TestP.Models
+@using TestP.Services
+@inject ISiteSettingsService SiteSettingsService
+@inject BreadCrumbService breadCrumbService
 
-<PageTitle>FAQ - eShop</PageTitle>
+<PageTitle>FAQ - @_siteConfig?.WebsiteBanner</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-8">
     <MudGrid Justify="Justify.Center" Spacing="4">
@@ -40,8 +45,18 @@
 </MudContainer>
 
 @code {
+    private SiteConfiguration? _siteConfig;
+
+    protected override async Task OnInitializedAsync()
+    {
+        breadCrumbService.Clear();
+        breadCrumbService.AddItem("Home", "/");
+        breadCrumbService.AddItem("Frequently Asked Questions", "/faq");
+        _siteConfig = await SiteSettingsService.GetSiteSettingsAsync();
+    }
     private List<FAQItem> faqs = new List<FAQItem>
     {
+        
         new FAQItem
         {
             Question = "How do I place an order?",
@@ -50,7 +65,7 @@
         new FAQItem
         {
             Question = "What payment methods do you accept?",
-            Answer = "We accept major credit cards (Visa, MasterCard, American Express), PayPal, and other local payment methods as indicated during checkout."
+            Answer = "We accept major credit cards (Visa, MasterCard, Equity, KCB ), PayPal, and other local payment methods as indicated during checkout."
         },
         new FAQItem
         {
@@ -65,7 +80,7 @@
         new FAQItem
         {
             Question = "What is your return policy?",
-            Answer = "We offer a 30-day return policy for most items, provided they are in their original condition. Please visit our 'Shipping & Delivery' or 'Returns & Refunds' page for detailed instructions on how to initiate a return."
+            Answer = "We offer a 7-day return policy for most items, provided they are in their original condition. Please visit our 'Shipping & Delivery' or 'Returns & Refunds' page for detailed instructions on how to initiate a return."
         },
         new FAQItem
         {
@@ -75,7 +90,7 @@
         new FAQItem
         {
             Question = "How can I contact customer support?",
-            Answer = "You can reach our customer support team via email at support@yourcompany.com, by phone at +1 (234) 567-890, or by using the contact form on our 'Contact Us' page."
+            Answer = "You can reach our customer support team via email at {@_siteConfig.ContactEmail}, by phone at {@_siteConfig.ContactPhone}, or by using the contact form on our 'Contact Us' page."
         }
     };
 

@@ -1,14 +1,19 @@
 @page "/about"
 
 @using MudBlazor
+@using Microsoft.AspNetCore.Components;
+@using TestP.Models
+@using TestP.Services
+@inject ISiteSettingsService SiteSettingsService
+@inject BreadCrumbService breadCrumbService
 
-<PageTitle>About Us - eShop</PageTitle>
+<PageTitle>About Us - @_siteConfig?.WebsiteBanner</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-8">
     <MudGrid Justify="Justify.Center" Spacing="4">
         @* Hero Section *@
         <MudItem xs="12" Class="text-center">
-            <MudText Typo="Typo.h3" Color="Color.Dark" Class="mb-4">Welcome to eShop</MudText>
+            <MudText Typo="Typo.h3" Color="Color.Dark" Class="mb-4">Welcome to @_siteConfig?.WebsiteBanner</MudText>
             <MudText Typo="Typo.h5" Color="Color.Primary" Class="mud-text-secondary mb-6">
                 Your trusted destination for the latest and greatest in electronics.
             </MudText>
@@ -28,7 +33,8 @@
                 <MudIcon Icon="@Icons.Material.Filled.Store" Size="Size.Large" Color="Color.Tertiary" Class="mb-4" />
                 <MudText Typo="Typo.h6" Class="mb-3">Our Story</MudText>
                 <MudText Typo="Typo.body1" Class="mud-text-secondary">
-                    Founded in [Year, e.g., 2020], eShop started with a simple vision: to make cutting-edge electronics
+                    Founded in 2025, @_siteConfig?.WebsiteBanner started with a simple vision: to make cutting-edge
+                    electronics
                     accessible to everyone. What began as a small venture driven by passion has grown into a thriving
                     online store, serving tech enthusiasts and everyday users alike. We believe in the power of
                     technology to enhance lives, and our journey is fueled by a commitment to bring you the best.
@@ -71,7 +77,8 @@
 
         @* Why Choose Us Section *@
         <MudItem xs="12">
-            <MudText Typo="Typo.h4" Class="text-center mb-6" Color="Color.Primary">Why Choose eShop?</MudText>
+            <MudText Typo="Typo.h4" Class="text-center mb-6" Color="Color.Primary">Why Choose
+                @_siteConfig?.WebsiteBanner?</MudText>
         </MudItem>
 
         <MudItem xs="12" sm="4" Class="text-center">
@@ -115,3 +122,14 @@
 
     </MudGrid>
 </MudContainer>
+
+@code {
+    private SiteConfiguration? _siteConfig;
+    protected override async Task OnInitializedAsync()
+    {
+        breadCrumbService.Clear();
+        breadCrumbService.AddItem("Home", "/");
+        breadCrumbService.AddItem("About Us", "/about");
+        _siteConfig = await SiteSettingsService.GetSiteSettingsAsync();
+    }
+}

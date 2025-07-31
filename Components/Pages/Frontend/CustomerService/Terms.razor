@@ -1,8 +1,14 @@
 @page "/terms"
 
 @using MudBlazor
+@using Microsoft.AspNetCore.Components;
+@using TestP.Models
+@using TestP.Services
+@inject ISiteSettingsService SiteSettingsService
+@inject BreadCrumbService breadCrumbService
 
-<PageTitle>Terms & Conditions - eShop</PageTitle>
+
+<PageTitle>Terms & Conditions - @_siteConfig?.WebsiteBanner</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-8">
     <MudGrid Justify="Justify.Center" Spacing="4">
@@ -18,7 +24,8 @@
             <MudPaper Elevation="0" Class="pa-4">
                 <MudText Typo="Typo.h5" Class="mt-6 mb-3">Introduction</MudText>
                 <MudText Typo="Typo.body1" Class="mud-text-secondary mb-4">
-                    Welcome to eShop! These Terms and Conditions ("Terms") govern your use of the eShop website and
+                    Welcome to @_siteConfig?.WebsiteBanner! These Terms and Conditions ("Terms") govern your use of the
+                    @_siteConfig?.WebsiteBanner website and
                     services. By accessing or using our Service, you agree to be bound by these Terms. If you disagree
                     with any part of the terms then you may not access the Service.
                 </MudText>
@@ -40,11 +47,11 @@
                 <MudText Typo="Typo.h5" Class="mt-6 mb-3">Intellectual Property</MudText>
                 <MudText Typo="Typo.body1" Class="mud-text-secondary mb-4">
                     The Service and its original content (excluding Content provided by you or other users), features
-                    and functionality are and will remain the exclusive property of [Your Company Name] and its
+                    and functionality are and will remain the exclusive property of @_siteConfig?.WebsiteBanner and its
                     licensors.
                     <br /><br />
                     Our trademarks and trade dress may not be used in connection with any product or service without the
-                    prior written consent of [Your Company Name].
+                    prior written consent of @_siteConfig?.WebsiteBanner.
                 </MudText>
 
                 <MudText Typo="Typo.h5" Class="mt-6 mb-3">Prohibited Conduct</MudText>
@@ -98,8 +105,8 @@
 
                 <MudText Typo="Typo.h5" Class="mt-6 mb-3">Governing Law</MudText>
                 <MudText Typo="Typo.body1" Class="mud-text-secondary mb-4">
-                    These Terms shall be governed and construed in accordance with the laws of [Your Jurisdiction, e.g.,
-                    The Netherlands], without regard to its conflict of law provisions.
+                    These Terms shall be governed and construed in accordance with the laws
+                    of @_siteConfig?.CompanyAddress, without regard to its conflict of law provisions.
                 </MudText>
 
                 <MudText Typo="Typo.h5" Class="mt-6 mb-3">Changes to These Terms and Conditions</MudText>
@@ -116,13 +123,24 @@
                 </MudText>
                 <MudList T="string">
                     <MudListItem Icon="@Icons.Material.Filled.Email">By email: <MudLink
-                            Href="mailto:legal@yourcompany.com">legal@yourcompany.com</MudLink>
+                            Href=$"mailto:@_siteConfig?.ContactEmail">@_siteConfig?.ContactEmail</MudLink>
                     </MudListItem>
-                    <MudListItem Icon="@Icons.Material.Filled.Phone">By phone number: <MudLink Href="tel:+1234567890">
-                            +1234567890</MudLink>
+                    <MudListItem Icon="@Icons.Material.Filled.Phone">By phone number: <MudLink
+                            Href=$"tel:+@_siteConfig?.ContactPhone">
+                            @_siteConfig?.ContactPhone</MudLink>
                     </MudListItem>
                 </MudList>
             </MudPaper>
         </MudItem>
     </MudGrid>
 </MudContainer>
+@code {
+    private SiteConfiguration? _siteConfig;
+    protected override async Task OnInitializedAsync()
+    {
+        breadCrumbService.Clear();
+        breadCrumbService.AddItem("Home", "/");
+        breadCrumbService.AddItem("Terms & Conditions", "/terms");
+        _siteConfig = await SiteSettingsService.GetSiteSettingsAsync();
+    }
+}

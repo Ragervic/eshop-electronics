@@ -1,8 +1,14 @@
 @page "/returns-refunds"
 
 @using MudBlazor
+@using Microsoft.AspNetCore.Components;
+@using TestP.Models
+@using TestP.Services
+@inject ISiteSettingsService SiteSettingsService
+@inject BreadCrumbService breadCrumbService
 
-<PageTitle>Returns & Refunds - eShop</PageTitle>
+
+<PageTitle>Returns & Refunds - @_siteConfig?.WebsiteBanner</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-8">
     <MudGrid Justify="Justify.Center" Spacing="4">
@@ -188,3 +194,14 @@
 
     </MudGrid>
 </MudContainer>
+
+@code {
+    private SiteConfiguration? _siteConfig;
+    protected override async Task OnInitializedAsync()
+    {
+        breadCrumbService.Clear();
+        breadCrumbService.AddItem("Home", "/");
+        breadCrumbService.AddItem("Returns & Refunds", "/returns-refunds");
+        _siteConfig = await SiteSettingsService.GetSiteSettingsAsync();
+    }
+}

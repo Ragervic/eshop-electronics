@@ -1,8 +1,14 @@
 @page "/shipping-delivery"
 
 @using MudBlazor
+@using Microsoft.AspNetCore.Components;
+@using TestP.Models
+@using TestP.Services
+@inject ISiteSettingsService SiteSettingsService
+@inject BreadCrumbService breadCrumbService
 
-<PageTitle>Shipping & Delivery - eShop</PageTitle>
+
+<PageTitle>Shipping & Delivery - @_siteConfig?.WebsiteBanner</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-8">
     <MudGrid Justify="Justify.Center" Spacing="4">
@@ -11,7 +17,7 @@
         <MudItem xs="12" Class="text-center">
             <MudText Typo="Typo.h3" Color="Color.Dark" Class="mb-4">Shipping & Delivery</MudText>
             <MudText Typo="Typo.h5" Color="Color.Primary" Class="mud-text-secondary mb-6">
-                Everything you need to know about getting your eShop order to your doorstep.
+                Everything you need to know about getting your @_siteConfig?.WebsiteBanner order to your doorstep.
             </MudText>
             <MudDivider Class="my-8" />
         </MudItem>
@@ -21,7 +27,10 @@
             <MudPaper Elevation="1" Class="pa-6 rounded-lg">
                 <MudText Typo="Typo.h6" Class="mb-3">Our Commitment to Timely Delivery</MudText>
                 <MudText Typo="Typo.body1" Class="mud-text-secondary">
-                    At eShop, we strive to process and ship your orders as quickly and efficiently as possible. We partner with reliable carriers to ensure your products arrive safely and on time. Please read below for detailed information regarding our shipping methods, costs, and delivery estimates.
+                    At @_siteConfig?.WebsiteBanner, we strive to process and ship your orders as quickly and efficiently
+                    as possible. We partner with reliable carriers to ensure your products arrive safely and on time.
+                    Please read below for detailed information regarding our shipping methods, costs, and delivery
+                    estimates.
                 </MudText>
             </MudPaper>
         </MudItem>
@@ -117,6 +126,15 @@
 </MudContainer>
 
 @code {
+    private SiteConfiguration? _siteConfig;
+    protected override async Task OnInitializedAsync()
+    {
+        breadCrumbService.Clear();
+        breadCrumbService.AddItem("Home", "/");
+        breadCrumbService.AddItem("Shipping & Delivery", "/shipping-delivery");
+        _siteConfig = await SiteSettingsService.GetSiteSettingsAsync();
+    }
+
     private List<ShippingOption> shippingOptions = new List<ShippingOption>
     {
         new ShippingOption { Method = "Standard Shipping", Cost = 5.00m, DeliveryTime = "5-7 Business Days" },
