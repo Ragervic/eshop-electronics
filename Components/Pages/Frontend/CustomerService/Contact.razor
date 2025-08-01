@@ -27,7 +27,7 @@
                 <MudText Typo="Typo.h6" Class="mb-2">Phone</MudText>
                 <MudText Typo="Typo.body1" Class="mud-text-secondary mb-4">Call us during business hours.</MudText>
                 <MudText Typo="Typo.h5" Class="mb-2">
-                    <MudLink Href="tel:+1234567890">+1 (234) 567-890</MudLink>
+                    <MudLink Href="@contactTelHref">@_siteConfig?.ContactPhone</MudLink>
                 </MudText>
             </MudPaper>
         </MudItem>
@@ -38,7 +38,7 @@
                 <MudText Typo="Typo.h6" Class="mb-2">Email</MudText>
                 <MudText Typo="Typo.body1" Class="mud-text-secondary mb-4">Send us an email anytime.</MudText>
                 <MudText Typo="Typo.h5" Class="mb-2">
-                    <MudLink Href=$"mailto:@_siteConfig?.ContactEmail">@_siteConfig?.ContactEmail</MudLink>
+                    <MudLink Href="@contactMailHref">@_siteConfig?.ContactEmail</MudLink>
                 </MudText>
             </MudPaper>
         </MudItem>
@@ -126,6 +126,9 @@
 @code {
     private ContactMessage contactMessage = new ContactMessage();
     private MudForm contactForm = new MudForm();
+    private string? contactMailHref;
+    private string? contactTelHref;
+
 
     private SiteConfiguration? _siteConfig;
     protected override async Task OnInitializedAsync()
@@ -134,6 +137,14 @@
         breadCrumbService.AddItem("Home", "/");
         breadCrumbService.AddItem("Contact Us", "/contact");
         _siteConfig = await SiteSettingsService.GetSiteSettingsAsync();
+
+        if (_siteConfig?.ContactEmail != null && _siteConfig.ContactPhone != null)
+        {
+            contactMailHref = $"mailto:{_siteConfig.ContactEmail}";
+            contactTelHref = $"tel:{_siteConfig.ContactPhone}";
+        }
+        base.OnInitialized();
+
     }
     private async Task SubmitContactForm()
     {

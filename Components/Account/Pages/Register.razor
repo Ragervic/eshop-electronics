@@ -17,12 +17,14 @@
 
 <PageTitle>Register</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Large" Class="my-12">
+<MudContainer MaxWidth="MaxWidth.Medium" Class="d-flex align-center justify-center flex-grow-1"
+    Style="min-height: 100vh;">
+   
 
-<MudText Typo="Typo.h3" GutterBottom="true">Register</MudText>
-
-<MudGrid>
-    <MudItem md="6">
+<MudGrid Justify="Justify.Center" Spacing="4" Class="mud-elevation-25 rounded-lg overflow-hidden flex-grow-1"
+        Style="max-width: 1000px; height: 100%;">
+        <MudItem md="6" Class="align-center justify-center pa-6">
+        <MudText Typo="Typo.h3" GutterBottom="true">Register</MudText>
         <StatusMessage Message="@Message" />
         <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
             <DataAnnotationsValidator />
@@ -49,20 +51,29 @@
                     <MudStaticButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" FormAction="FormAction.Submit">Register</MudStaticButton>
                 </MudItem>
                 <MudSpacer />
-                <div class="flex-row ps-6 align-items-center justify-content-between p-2 mt-4">
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">Already have an account?</MudText>
-                        <MudLink Href="/Account/Login" Class="mud-typography mud-typography-h2">Login</MudLink>
-                        <a href="/"><MudText Typo="Typo.body1" Color="Color.Primary">Back to the HomePage-></MudText></a>
-                </div>
+                
             </MudGrid>
+            <MudItem md="12" Class="align-center justify-center">
+                <MudText Typo="Typo.body1" GutterBottom="true" Style="text-align: center; padding:6px;">Use another service to register.</MudText>
+                <ExternalLoginPicker />
+            </MudItem>
+            <div class="flex-row ps-6 align-items-center justify-content-between p-2 mt-4">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Already have an account?</MudText>
+                <MudLink Href="/Account/Login" Class="mud-typography mud-typography-h2">Login</MudLink>
+                <a href="/"><MudText Typo="Typo.body1" Color="Color.Primary">Back to the HomePage-></MudText></a>
+            </div>
         </EditForm>
     </MudItem>
-    <MudItem md="6">
-        <MudText Typo="Typo.body1" GutterBottom="true" Style="text-align: center; padding-bottom:6px;">Use another service to register.</MudText>
-        <ExternalLoginPicker />
+    <MudItem xs="12" sm="6" Class="d-none d-sm-flex align-center justify-center pa-0" Style="background-image: url('/images/login.jpg');
+            background-size: cover;   
+            background-position: center center; 
+            min-height: 700px;
+            flex-direction: column;">
     </MudItem>
+   
 </MudGrid>
 </MudContainer>
+     
 
 @code {
     private IEnumerable<IdentityError>? identityErrors;

@@ -123,10 +123,10 @@
                 </MudText>
                 <MudList T="string">
                     <MudListItem Icon="@Icons.Material.Filled.Email">By email: <MudLink
-                            Href=$"mailto:@_siteConfig?.ContactEmail">@_siteConfig?.ContactEmail</MudLink>
+                            Href=@contactMailHref>@_siteConfig?.ContactEmail</MudLink>
                     </MudListItem>
                     <MudListItem Icon="@Icons.Material.Filled.Phone">By phone number: <MudLink
-                            Href=$"tel:+@_siteConfig?.ContactPhone">
+                            Href="@contactTelHref">
                             @_siteConfig?.ContactPhone</MudLink>
                     </MudListItem>
                 </MudList>
@@ -136,11 +136,19 @@
 </MudContainer>
 @code {
     private SiteConfiguration? _siteConfig;
+    private string? contactMailHref;
+    private string? contactTelHref;
     protected override async Task OnInitializedAsync()
     {
         breadCrumbService.Clear();
         breadCrumbService.AddItem("Home", "/");
         breadCrumbService.AddItem("Terms & Conditions", "/terms");
         _siteConfig = await SiteSettingsService.GetSiteSettingsAsync();
+        if (_siteConfig?.ContactEmail != null && _siteConfig.ContactPhone!=null)
+        {
+            contactMailHref = $"mailto:{_siteConfig.ContactEmail}";
+            contactTelHref = $"tel:{_siteConfig.ContactPhone}";
+        }
+        base.OnInitialized();
     }
 }
