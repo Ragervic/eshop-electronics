@@ -30,7 +30,7 @@
             <MudCard Elevation="0" Class="mud-width-full">
                 <MudCardHeader Class="justify-center">
                     <StatusMessage Message="@errorMessage" />
-                    <MudText Typo="Typo.h4" Class="mb-3">Login to eShop</MudText>
+                    <MudText Typo="Typo.h4" Class="mb-3">Login</MudText>
                 </MudCardHeader>
                 <MudCardContent>
                     <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
@@ -71,11 +71,13 @@
                     </div>
                 </MudCardContent>
                 <MudCardActions Class="d-flex flex-column align-center">
+                    <MudDivider Class="my-1" />
                     <MudLink Href="Account/ForgotPassword">Forgot your password?</MudLink><br />
                     <MudLink
                         Href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">
                         Register as a new user</MudLink><br />
-                    <MudLink Href="Account/ResendEmailConfirmation">Resend email confirmation</MudLink>
+                    <MudLink Href="Account/ResendEmailConfirmation">Resend email confirmation</MudLink><br />
+                    <MudLink Href="/">Back To Homepage-></MudLink>
                 </MudCardActions>
             </MudCard>
         </MudItem>

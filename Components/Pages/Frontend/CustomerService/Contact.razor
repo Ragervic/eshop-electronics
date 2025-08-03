@@ -50,11 +50,9 @@
                     Class="mb-3" />
                 <MudText Typo="Typo.h6" Class="mb-2">Address</MudText>
                 <MudText Typo="Typo.body1" Class="mud-text-secondary mb-4">Visit our office or send us mail.</MudText>
-                <MudText Typo="Typo.h5" Class="mb-2">
+                <MudText Typo="Typo.body1" Class="mb-2">
                     @_siteConfig?.WebsiteBanner<br />
-                    @_siteConfig?.ContactEmail<br />
-                    @_siteConfig?.CompanyAddress<br />
-                    @_siteConfig?.ContactPhone
+                    Location : @_siteConfig?.CompanyAddress<br />
                 </MudText>
             </MudPaper>
         </MudItem>
@@ -64,7 +62,7 @@
                 <MudIcon Icon="@Icons.Material.Filled.AccessTime" Size="Size.Large" Color="Color.Info" Class="mb-3" />
                 <MudText Typo="Typo.h6" Class="mb-2">Business Hours</MudText>
                 <MudText Typo="Typo.body1" Class="mud-text-secondary mb-4">We're available during these hours:</MudText>
-                <MudText Typo="Typo.h5" Class="mb-2">
+                <MudText Typo="Typo.body1" Class="mb-2">
                     Mon - Fri: 9:00 AM - 5:00 PM<br />
                     Sat - Sun: Closed
                 </MudText>
@@ -110,12 +108,14 @@
             <MudPaper Elevation="2" Class="pa-6 rounded-lg text-center">
                 <MudText Typo="Typo.h5" Class="mb-4">Find Us on the Map</MudText>
                 <MudText Typo="Typo.body1" Class="mud-text-secondary mb-4">
-                    Visit our location. Please note, this is a placeholder. You can embed a real map (e.g., Google Maps
-                    iframe) here.
+                    Visit our location. You can find us at the address below or on the map.
                 </MudText>
                 <div
                     style="height: 300px; background-color: #e0e0e0; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
-                    <MudText Typo="Typo.h6" Color="Color.Dark">Map Placeholder</MudText>
+                    <iframe
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d7977.617346282666!2d36.79115467408086!3d-1.2890063356272417!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f11dc8ae0a293%3A0x54a6d51ee5c88a9!2sAttain%20Enterprises%20Ltd!5e0!3m2!1sen!2sus!4v1754230254994!5m2!1sen!2sus"
+                        width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"></iframe>
                 </div>
             </MudPaper>
         </MudItem>

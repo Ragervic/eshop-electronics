@@ -54,12 +54,15 @@
                 
             </MudGrid>
             <MudItem md="12" Class="align-center justify-center">
-                <MudText Typo="Typo.body1" GutterBottom="true" Style="text-align: center; padding:6px;">Use another service to register.</MudText>
+                    <MudDivider Class="my-4" />
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" GutterBottom =" true"
+                        Style="text-align: center; padding-top:6px;">Use another service to register.</MudText>
                 <ExternalLoginPicker />
             </MudItem>
-            <div class="flex-row ps-6 align-items-center justify-content-between p-2 mt-4">
-                <MudText Typo="Typo.body2" Color="Color.Secondary">Already have an account?</MudText>
-                <MudLink Href="/Account/Login" Class="mud-typography mud-typography-h2">Login</MudLink>
+                <div class="d-flex flex-column align-center">
+                    <MudDivider Class="my-4" />
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Already have an account?</MudText><br/>
+                <MudLink Href="/Account/Login" Class="mud-typography mud-typography-h2">Login</MudLink><br/>
                 <a href="/"><MudText Typo="Typo.body1" Color="Color.Primary">Back to the HomePage-></MudText></a>
             </div>
         </EditForm>
