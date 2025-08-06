@@ -15,6 +15,13 @@ using TestP.Services.Analytics;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+// Configure the cookie policy
+builder.Services.AddAntiforgery(options =>
+{
+    options.Cookie.SameSite = SameSiteMode.Lax;
+});
+
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddHttpClient();
@@ -90,6 +97,8 @@ var connectionString = builder.Configuration.GetConnectionString("TestP") ?? thr
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+
 
 var app = builder.Build();
 

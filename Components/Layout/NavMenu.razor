@@ -20,17 +20,20 @@
         </MudNavGroup> *@
 
         <MudNavGroup Title="Product Management" Icon="@Icons.Material.Filled.ElectricMoped">
-            <MudNavLink Href="/products" Icon="@Icons.Material.Filled.ProductionQuantityLimits">Products</MudNavLink>
-            <MudNavLink Href="/categories" Icon="@Icons.Material.Filled.Category">Categories</MudNavLink>
+            <MudNavLink Href="/admin-products" Icon="@Icons.Material.Filled.ProductionQuantityLimits">Products
+            </MudNavLink>
+            <MudNavLink Href="/admin-categories" Icon="@Icons.Material.Filled.Category">Categories</MudNavLink>
         </MudNavGroup>
         <MudNavLink Href="/admin-orders" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.BookmarkBorder">Orders
         </MudNavLink>
-        <MudNavLink Href="/sales" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PointOfSale">Sales
+        <MudNavLink Href="/admin-sales" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PointOfSale">Sales
         </MudNavLink>
-        <MudNavLink Href="/reports" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Report">Reports
+        <MudNavLink Href="/admin-reports" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Report">Reports
+        </MudNavLink>
+        <MudNavLink Href="/admin-refunds" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.MoneyOff">Refunds
         </MudNavLink>
         <MudSpacer />
-        <MudNavLink Href="/settings" Icon="@Icons.Material.Filled.Settings">Settings</MudNavLink>
+        <MudNavLink Href="/admin-settings" Icon="@Icons.Material.Filled.Settings">Settings</MudNavLink>
         @* <MudSpacer /> *@
     </AuthorizeView>
 </MudNavMenu>

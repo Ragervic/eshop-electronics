@@ -37,89 +37,108 @@ else
     <MudPaper Class="pa-4">
         <MudCard>
             <MudForm Model="@product" @ref="form" enablevalidation="true">
-                <MudTextField @bind-Value="product.Name" Label="Product Name" Required="true"
-                    RequiredError="Product Name is required!" />
-                <MudTextField @bind-Value="product.Brand" Label="Product Brand" Required="true"
-                    RequiredError="Product Brand is required!" />
-                <MudTextField @bind-Value="product.Description" Label="Description" Lines="3" />
-                <MudTextField @bind-Value="product.Price" Label="Product Price" Required="true"
-                    RequiredError="Product Price is required!" Adornment="Adornment.Start" AdornmentText="KES"
-                    For="@(() => product.Price)" />
-                <MudNumericField @bind-Value="product.StockQuantity" Label="Stock" Required="true" Min="0" Max="10000"
-                    HideSpinButtons="false" RequiredError="Stock is required!" Step="1"
-                    For="@(() => product.StockQuantity)" />
+                <MudGrid Spacing="3">
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="product.Name" Label="Product Name" Required="true"
+                            RequiredError="Product Name is required!" Clearable="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="product.Brand" Label="Product Brand" Required="true"
+                            RequiredError="Product Brand is required!" Clearable="true" />
+                    </MudItem>
 
-                @if (Categories == null)
-                {
-                    <MudProgressLinear Indeterminate="true" Class="my-4" />
-                    <MudText>Loading categories...</MudText>
-                }
-                else if (!Categories.Any())
-                {
-                    <MudAlert Severity="Severity.Warning">No categories found. Please add categories first.</MudAlert>
-                }
-                else
-                {
-                    <MudSelect T="int" Label="Product Category" @bind-Value="product.CategoryId" Required="true"
-                        RequiredError="Product Category is required!" Variant="Variant.Text" Clearable="true"
-                        Placeholder="Select a category" For="@(() => product.CategoryId)">
-                        @foreach (var category in Categories)
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="product.Description" Label="Description" Lines="3"
+                            HelperText="A brief description of the product." />
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="product.Price" Label="Product Price" Required="true"
+                            RequiredError="Product Price is required!" Adornment="Adornment.Start" AdornmentText="KES"
+                            For="@(() => product.Price)" InputType="InputType.Number" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                    <MudNumericField @bind-Value="product.StockQuantity" Label="Stock" Required="true" Min="0" Max="10000"
+                        HideSpinButtons="false" RequiredError="Stock is required!" Step="1"
+                        For="@(() => product.StockQuantity)" />
+                    </MudItem>
+
+                    <MudItem xs="12">
+                    @if (Categories == null)
+                    {
+                        <MudProgressLinear Indeterminate="true" Class="my-4" />
+                        <MudText>Loading categories...</MudText>
+                    }
+                    else if (!Categories.Any())
+                    {
+                        <MudAlert Severity="Severity.Warning">No categories found. Please add categories first.</MudAlert>
+                    }
+                    else
+                    {
+                        <MudSelect T="int" Label="Product Category" @bind-Value="product.CategoryId" Required="true"
+                            RequiredError="Product Category is required!" Variant="Variant.Text" Clearable="true"
+                            Placeholder="Select a category" For="@(() => product.CategoryId)">
+                            @foreach (var category in Categories)
+                            {
+                                <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    }
+                    </MudItem>
+                    <MudItem xs="12">
+
+                    <MudText Typo="Typo.h6" Class="mt-4 mb-2">Product Image</MudText>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <InputFile OnChange="HandleFileSelection" id="fileInput" hidden />
+                        <MudButton HtmlTag="label" For="fileInput" Variant="Variant.Filled" Color="Color.Secondary"
+                            StartIcon="@Icons.Material.Filled.CloudUpload">
+                            Browse File
+                        </MudButton>
+                        @if (_selectedFileName != null)
                         {
-                            <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
+                            <MudText>@_selectedFileName</MudText>
                         }
-                    </MudSelect>
-                }
+                    </MudStack>
 
-                <MudText Typo="Typo.h6" Class="mt-4 mb-2">Product Image</MudText>
-                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                    <InputFile OnChange="HandleFileSelection" id="fileInput" hidden />
-                    <MudButton HtmlTag="label" For="fileInput" Variant="Variant.Filled" Color="Color.Secondary"
-                        StartIcon="@Icons.Material.Filled.CloudUpload">
-                        Browse File
-                    </MudButton>
-                    @if (_selectedFileName != null)
+                    @if (_uploadedImageUrl != null)
                     {
-                        <MudText>@_selectedFileName</MudText>
+                        <MudImage Src="@_uploadedImageUrl" Alt="Product Preview" Width="200" Class="mt-3 rounded-lg"
+                            Style="object-fit: contain;" />
                     }
-                </MudStack>
-
-                @if (_uploadedImageUrl != null)
-                {
-                    <MudImage Src="@_uploadedImageUrl" Alt="Product Preview" Width="200" Class="mt-3 rounded-lg"
-                        Style="object-fit: contain;" />
-                }
-                else if (!string.IsNullOrEmpty(product.ImageUrl) && product.ImageUrl != "images/placeholder.png")
-                {
-                    <MudImage Src="@product.ImageUrl" Alt="Current Image" Width="200" Class="mt-3 rounded-lg"
-                        Style="object-fit: contain;" />
-                }
-                else
-                {
-                    <MudImage Src="images/placeholder.png" Alt="No Image" Width="200"
-                        Class="mt-3 rounded-lg mud-border-grey-lighten2" Style="object-fit: contain;" />
-                }
-
-                @if (_isUploading)
-                {
-                    <MudProgressLinear Indeterminate="true" Class="my-3" />
-                    <MudText Typo="Typo.caption" Color="Color.Primary">Uploading image...</MudText>
-                }
-                <MudText Typo="Typo.caption" Color="Color.Error">
-                    @if (string.IsNullOrEmpty(product.ImageUrl) || product.ImageUrl == "images/placeholder.png")
+                    else if (!string.IsNullOrEmpty(product.ImageUrl) && product.ImageUrl != "images/placeholder.png")
                     {
-                        <span>Product image is required!</span>
+                        <MudImage Src="@product.ImageUrl" Alt="Current Image" Width="200" Class="mt-3 rounded-lg"
+                            Style="object-fit: contain;" />
                     }
-                </MudText>
+                    else
+                    {
+                        <MudImage Src="images/placeholder.png" Alt="No Image" Width="200"
+                            Class="mt-3 rounded-lg mud-border-grey-lighten2" Style="object-fit: contain;" />
+                    }
 
-                <div class="d-flex justify-content-end mt-6">
-                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mr-2"
-                        OnClick="EditProduct">
-                        Save Changes
-                    </MudButton>
-                    <MudButton Variant="Variant.Text" OnClick="GoBack">
-                        Cancel
-                    </MudButton>
-                </div>
+                    @if (_isUploading)
+                    {
+                        <MudProgressLinear Indeterminate="true" Class="my-3" />
+                        <MudText Typo="Typo.caption" Color="Color.Primary">Uploading image...</MudText>
+                    }
+                    <MudText Typo="Typo.caption" Color="Color.Error">
+                        @if (string.IsNullOrEmpty(product.ImageUrl) || product.ImageUrl == "images/placeholder.png")
+                        {
+                            <span>Product image is required!</span>
+                        }
+                    </MudText>
+                    </MudItem>
+
+                    <div class="d-flex justify-content-end mt-6">
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary"
+                            Class="mr-2" OnClick="EditProduct">
+                            Save Changes
+                        </MudButton>
+                        <MudButton Variant="Variant.Text" OnClick="GoBack">
+                            Cancel
+                        </MudButton>
+                    </div>
+                </MudGrid>
             </MudForm>
         </MudCard>
     </MudPaper>

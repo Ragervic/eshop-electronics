@@ -1,4 +1,4 @@
-@page "/reports"
+@page "/admin-reports"
 
 @using TestP.Components.Layout
 @layout AdminLayout
@@ -15,7 +15,7 @@
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject IJSRuntime JSRuntime
 @inject ISnackbar Snackbar
-
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-8">
 <MudPaper Elevation="2" Style="background-color:	#c9dcff; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  top: 0;z-index: 1000;">
     <MudText Typo="Typo.h4" Class="mb-8 mt-4 text-bold" GutterBottom="true" Color="Color.Primary">Reports</MudText>
 </MudPaper>
@@ -129,7 +129,7 @@
         </MudCard>
     </MudItem>
 </MudGrid>
-
+</MudContainer>
 @code {
     private DateTime? SalesReportStartDate { get; set; } = DateTime.Today.AddMonths(-1);
     private DateTime? SalesReportEndDate { get; set; } = DateTime.Today;

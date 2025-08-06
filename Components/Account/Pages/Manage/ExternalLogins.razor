@@ -54,8 +54,10 @@
             <p>
                 @foreach (var provider in otherLogins)
                 {
-                    <button type="submit" class="btn btn-primary" name="Provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">
-                        @provider.DisplayName
+                     <button type="submit" class="external-login-btn @GetProviderClass(provider.Name)" name="provider"
+                        value="@provider.Name" title="Log in using your @provider.DisplayName account">
+                        <img src="@GetProviderIcon(provider.Name)" alt="@provider.DisplayName" class="provider-icon" />
+                        <span class="provider-text">Continue with @provider.DisplayName</span>
                     </button>
                 }
             </p>
@@ -136,5 +138,26 @@
         await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
         RedirectManager.RedirectToCurrentPageWithStatus("The external login was added.", HttpContext);
+    }
+    private string GetProviderClass(string providerName)
+    {
+        return providerName.ToLower() switch
+        {
+            "google" => "google",
+            "facebook" => "facebook",
+            _ => ""
+        };
+    }
+
+    private string GetProviderIcon(string providerName)
+    {
+        return providerName.ToLower() switch
+        {
+            "google" =>
+            "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAxOCAxOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE3LjY0IDkuMjA0NTVDMTcuNjQgOC41NjY0IDE3LjU4MjcgNy45NTI3MyAxNy40NzY0IDcuMzYzNjRIMTlWMTBIMTcuNjRWOS4yMDQ1NVoiIGZpbGw9IiNGQjQwNDAiLz4KPHBhdGggZD0iTTkgMTguMDAwMUMxMS40MyAxOC4wMDAxIDEzLjQ2NzMgMTcuMTk0NSAxNC45NjM2IDE1Ljc4MThMMTIuNTM2NCAxMy43ODE4QzExLjg0NTUgMTQuNDQ1NSAxMC45NjM2IDE0LjgxODIgOSAxNC44MTgyQzYuNjU5MDkgMTQuODE4MiA0LjY3MjczIDEzLjM2MzYgMy45NjM2NCAxMS4zNjM2SDAuNjM2MzY0VjE0LjQ1NDVDMi4xODE4MiAxNy4wOTA5IDUuNDA5MDkgMTguMDAwMSA5IDE4LjAwMDFaIiBmaWxsPSIjMzRBODUzIi8+CjxwYXRoIGQ9Ik0zLjk2MzY0IDExLjM2MzZDMzguNzI3MyA5LjgxODE4IDMuNzI3MjcgOC4xODE4MiAzLjk2MzY0IDYuNjM2MzZIMC42MzYzNjRWMTAuMDkwOUMwLjYzNjM2NCAxMS43MjcyIDAuNjM2MzY0IDEzLjM2MzYgMy45NjM2NCAxMS4zNjM2WiIgZmlsbD0iI0ZGRDcwMCIvPgo8cGF0aCBkPSJNOSAzLjYzNjM2QzEwLjMxODIgMy42MzYzNiAxMS41MDkxIDQuMTgxODIgMTIuNDA5MSA1LjE4MTgyTDE0LjkwOTEgMi42ODE4MkMxMy40NjczIDEuMzE4MTggMTEuNDMgMC41NDU0NTUgOSAwLjU0NTQ1NUM1LjQwOTA5IDAuNTQ1NDU1IDIuMTgxODIgMS40NTQ1NSAwLjYzNjM2NCA0LjA5MDkxSDMuOTYzNjRDNC42NzI3MyAyLjA5MDkxIDYuNjU5MDkgMC42MzYzNjQgOSAwLjYzNjM2NFYzLjYzNjM2WiIgZmlsbD0iI0VCNzQzQyIvPgo8L3N2Zz4K",
+            "facebook" =>
+            "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAxOCAxOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE4IDlDMTggNC4wMzkgMTMuOTYxIDAgOSAwUzAgNC4wMzkgMCA5YzAgNC40NzEgMy4yNDMgOC4xNzQgNy40NzEgOC44ODlWMTEuNzE5SDYuMjg5VjloMS4xODJWNy4yNTVDNi4yODkgNC43MTggNy4yNzMgMy42OTkgOS42NzMgMy42OTlDMTAgMy42OTkgMTAuMjE4IDMuNzI3IDEwLjIxOCAzLjcyN1Y1LjQ1NUg5Ljk5MUM5LjcyNyA1LjQ1NSA5LjQ3MSA1LjU0NSA5LjQ3MSA2LjA5MVY5SDkuNzI3TDE4IDl6IiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K",
+            _ => ""
+        };
     }
 }

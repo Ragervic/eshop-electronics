@@ -21,149 +21,156 @@
 
 <AuthorizeView Roles="Admin">
     <Authorized>
-        <MudPaper Elevation="2" Style="background-color:	#c9dcff; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  top: 0;z-index: 1000;">
-            <MudText Typo="Typo.h4" Class="mb-8 mt-4 text-bold" GutterBottom="true" Color="Color.Primary">Dashboard
-            </MudText>
-        </MudPaper>
+        <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-8">
+            <MudPaper Elevation="2"
+                Style="background-color:	#c9dcff; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  top: 0;z-index: 1000;">
+                <MudText Typo="Typo.h4" Class="mb-8 mt-4 text-bold" GutterBottom="true" Color="Color.Primary">Dashboard
+                </MudText>
+            </MudPaper>
 
-        @if (_isLoading)
-        {
-            <MudProgressLinear Indeterminate="true" Class="my-4" />
-            <MudText Typo="Typo.body1">Loading dashboard data...</MudText>
-        }
-        else
-        {
-            <MudGrid Spacing="4" Class="mb-6">
-                <MudItem xs="12" sm="6" md="4">
-                    <a href="/sales">
-                        <MudPaper Elevation="1" Class="pa-4 d-flex align-center flex-grow-1" Style="height:120px;">
-                            <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Color="Color.Success" Size="Size.Large"
-                                Class="mr-4" />
-                            <div>
-                                <MudText Typo="Typo.h6" Class="mud-text-secondary">Total Sales</MudText>
-                                <MudText Typo="Typo.h4" Color="Color.Primary">@_totalSales.ToString("C2", _kes)</MudText>
-                                <MudText Typo="Typo.caption" Class="mud-text-success">Total revenue from all orders
-                                </MudText>
-                            </div>
-                        </MudPaper>
-                    </a>
-                </MudItem>
-                <MudItem xs="12" sm="6" md="4">
-                    <a href="/admin-orders">
-                        <MudPaper Elevation="1" Class="pa-4 d-flex align-center flex-grow-1" Style="height: 120px;">
-                            <MudIcon Icon="@Icons.Material.Filled.ShoppingBag" Color="Color.Warning" Size="Size.Large"
-                                Class="mr-4" />
-                            <div>
-                                <MudText Typo="Typo.h6" Class="mud-text-secondary">Orders Today</MudText>
-                                <MudText Typo="Typo.h4" Color="Color.Primary">@_ordersTodayCount</MudText>
-                                <MudText Typo="Typo.caption" Class="mud-text-info">Orders placed within the last 24 hours
-                                </MudText>
-                            </div>
-                        </MudPaper>
-                    </a>
-                </MudItem>
-                <MudItem xs="12" sm="6" md="4">
-                    <a href="/products">
-                        <MudPaper Elevation="1" Class="pa-4 d-flex align-center flex-grow-1" Style="height: 120px;">
-                            <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Large"
-                                Class="mr-4" />
-                            <div>
-                                <MudText Typo="Typo.h6" Class="mud-text-secondary">Low Stock Items</MudText>
-                                <MudText Typo="Typo.h4" Color="Color.Primary">@_lowStockItemCount</MudText>
-                                <MudText Typo="Typo.caption" Class="mud-text-error">Action Required</MudText>
-                            </div>
-                        </MudPaper>
-                    </a>
-                </MudItem>
-            </MudGrid>
+            @if (_isLoading)
+            {
+                <MudProgressLinear Indeterminate="true" Class="my-4" />
+                <MudText Typo="Typo.body1">Loading dashboard data...</MudText>
+            }
+            else
+            {
+                <MudGrid Spacing="4" Class="mb-6">
+                    <MudItem xs="12" sm="6" md="4">
+                        <a href="/sales">
+                            <MudPaper Elevation="1" Class="pa-4 d-flex align-center flex-grow-1" Style="height:120px;">
+                                <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Color="Color.Success" Size="Size.Large"
+                                    Class="mr-4" />
+                                <div>
+                                    <MudText Typo="Typo.h6" Class="mud-text-secondary">Total Sales</MudText>
+                                    <MudText Typo="Typo.h4" Color="Color.Primary">@_totalSales.ToString("C2", _kes)
+                                    </MudText>
+                                    <MudText Typo="Typo.caption" Class="mud-text-success">Total revenue from all orders
+                                    </MudText>
+                                </div>
+                            </MudPaper>
+                        </a>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="4">
+                        <a href="/admin-orders">
+                            <MudPaper Elevation="1" Class="pa-4 d-flex align-center flex-grow-1" Style="height: 120px;">
+                                <MudIcon Icon="@Icons.Material.Filled.ShoppingBag" Color="Color.Warning" Size="Size.Large"
+                                    Class="mr-4" />
+                                <div>
+                                    <MudText Typo="Typo.h6" Class="mud-text-secondary">Orders Today</MudText>
+                                    <MudText Typo="Typo.h4" Color="Color.Primary">@_ordersTodayCount</MudText>
+                                    <MudText Typo="Typo.caption" Class="mud-text-info">Orders placed within the last 24
+                                        hours
+                                    </MudText>
+                                </div>
+                            </MudPaper>
+                        </a>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="4">
+                        <a href="/products">
+                            <MudPaper Elevation="1" Class="pa-4 d-flex align-center flex-grow-1" Style="height: 120px;">
+                                <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Large"
+                                    Class="mr-4" />
+                                <div>
+                                    <MudText Typo="Typo.h6" Class="mud-text-secondary">Low Stock Items</MudText>
+                                    <MudText Typo="Typo.h4" Color="Color.Primary">@_lowStockItemCount</MudText>
+                                    <MudText Typo="Typo.caption" Class="mud-text-error">Action Required</MudText>
+                                </div>
+                            </MudPaper>
+                        </a>
+                    </MudItem>
+                </MudGrid>
 
 
-            <MudGrid Spacing="4" Class="mb-6">
-                <MudItem xs="12" md="6">
-                    <MudPaper Elevation="1" Class="pa-4 mb-6">
-                        <MudText Typo="Typo.h6" Class="mb-4">Revenue Trends</MudText>
-                        @* MudChart for Revenue Trends *@
-                        @if (_isLoadingCharts)
-                        {
-                            <MudProgressCircular Indeterminate="true" Class="d-flex justify-center my-8" />
-                        }
-                        else if (_revenueData == null || !_revenueData.Any())
-                        {
-                            <MudAlert Severity="Severity.Info" Class="my-4">No revenue data available for this period.
-                            </MudAlert>
-                        }
-                        else
-                        {
-                            @if (RevenueChartSeries.FirstOrDefault()?.Data?.Length >= 2)
+                <MudGrid Spacing="4" Class="mb-6">
+                    <MudItem xs="12" md="6">
+                        <MudPaper Elevation="1" Class="pa-4 mb-6">
+                            <MudText Typo="Typo.h6" Class="mb-4">Revenue Trends</MudText>
+                            @* MudChart for Revenue Trends *@
+                            @if (_isLoadingCharts)
                             {
-                                var interpolation = RevenueChartSeries.FirstOrDefault()?.Data?.Length >= 4 ?
-                                InterpolationOption.NaturalSpline : InterpolationOption.Straight;
-                                _revenueChartOptions.InterpolationOption = interpolation;
-                                <MudChart ChartType="ChartType.Line" ChartOptions="_revenueChartOptions"
-                                    ChartSeries="RevenueChartSeries" XAxisLabels="RevenueChartLabels" Height="250px" Width="100%" />
+                                <MudProgressCircular Indeterminate="true" Class="d-flex justify-center my-8" />
+                            }
+                            else if (_revenueData == null || !_revenueData.Any())
+                            {
+                                <MudAlert Severity="Severity.Info" Class="my-4">No revenue data available for this period.
+                                </MudAlert>
                             }
                             else
                             {
-                                <MudAlert Severity="Severity.Info" Class="my-4">Not enough data to display chart (minimum 2 points
-                                    required).</MudAlert>
+                                @if (RevenueChartSeries.FirstOrDefault()?.Data?.Length >= 2)
+                                {
+                                    var interpolation = RevenueChartSeries.FirstOrDefault()?.Data?.Length >= 4 ?
+                                    InterpolationOption.NaturalSpline : InterpolationOption.Straight;
+                                    _revenueChartOptions.InterpolationOption = interpolation;
+                                    <MudChart ChartType="ChartType.Line" ChartOptions="_revenueChartOptions"
+                                        ChartSeries="RevenueChartSeries" XAxisLabels="RevenueChartLabels" Height="250px"
+                                        Width="100%" />
+                                }
+                                else
+                                {
+                                    <MudAlert Severity="Severity.Info" Class="my-4">Not enough data to display chart (minimum 2
+                                        points
+                                        required).</MudAlert>
+                                }
                             }
-                        }
-                    </MudPaper>
-                </MudItem>
+                        </MudPaper>
+                    </MudItem>
 
-                <MudItem xs="12" md="6">
-                    <MudPaper Elevation="1" Class="pa-4 mb-6">
-                        <MudText Typo="Typo.h6" Class="mb-4">Orders by Category</MudText>
-                        @if (_isLoadingCharts)
-                        {
-                            <MudProgressCircular Indeterminate="true" Class="d-flex justify-center my-8" />
-                        }
-                        else if (_ordersByCategoryData == null || !_ordersByCategoryData.Any())
-                        {
-                            <MudAlert Severity="Severity.Info" Class="my-4">No orders by category data available.
-                            </MudAlert>
-                        }
-                        else
-                        {
-                            <MudChart ChartType="ChartType.Donut" LegendPosition="Position.End"
-                                ChartOptions="_ordersByCategoryChartOptions" InputData="OrdersByCategoryChartData"
-                                InputLabels="OrdersByCategoryChartLabels" Height="300px" Width="100%" />
-                        }
-                    </MudPaper>
-                </MudItem>
-            </MudGrid>
+                    <MudItem xs="12" md="6">
+                        <MudPaper Elevation="1" Class="pa-4 mb-6">
+                            <MudText Typo="Typo.h6" Class="mb-4">Orders by Category</MudText>
+                            @if (_isLoadingCharts)
+                            {
+                                <MudProgressCircular Indeterminate="true" Class="d-flex justify-center my-8" />
+                            }
+                            else if (_ordersByCategoryData == null || !_ordersByCategoryData.Any())
+                            {
+                                <MudAlert Severity="Severity.Info" Class="my-4">No orders by category data available.
+                                </MudAlert>
+                            }
+                            else
+                            {
+                                <MudChart ChartType="ChartType.Donut" LegendPosition="Position.End"
+                                    ChartOptions="_ordersByCategoryChartOptions" InputData="OrdersByCategoryChartData"
+                                    InputLabels="OrdersByCategoryChartLabels" Height="300px" Width="100%" />
+                            }
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
 
-            <MudPaper Elevation="1" Class="pa-4">
-                <MudText Typo="Typo.h6" Class="mb-4">Recent Orders</MudText>
-                @if (!_recentOrders.Any())
-                {
-                    <MudAlert Severity="Severity.Info">No recent orders to display.</MudAlert>
-                }
-                else
-                {
-                    <MudTable Items="@_recentOrders" Hover="true" Breakpoint="Breakpoint.Sm" Class="mb-4">
-                        <HeaderContent>
-                            <MudTh>ORDER ID</MudTh>
-                            <MudTh>CUSTOMER</MudTh>
-                            <MudTh>AMOUNT</MudTh>
-                            <MudTh>STATUS</MudTh>
-                            <MudTh>DATE</MudTh>
-                            <MudTh>DELIVERY METHOD</MudTh>
-                        </HeaderContent>
-                        <RowTemplate Context="item">
-                            <MudTd DataLabel="Order ID">@item.Id.ToString().Substring(0, 8)</MudTd> @* Shortened ID for display *@
-                            <MudTd DataLabel="Customer">@item.CustomerAddress?.FullName</MudTd>
-                            <MudTd DataLabel="Amount">@item.TotalAmount.ToString("C2")</MudTd>
-                            <MudTd DataLabel="Status">
-                                <MudChip T="string" Color="@GetStatusColor(item.Status)">@item.Status</MudChip>
-                            </MudTd>
-                            <MudTd DataLabel="Order Date">@item.OrderDate.ToString("dd MMM yyyy HH:mm")</MudTd>
-                            <MudTd DataLabel="Delivery Method">@item.DeliveryDetails?.DeliveryMethod</MudTd>
-                        </RowTemplate>
-                    </MudTable>
-                }
-            </MudPaper>
-        }
+                <MudPaper Elevation="1" Class="pa-4">
+                    <MudText Typo="Typo.h6" Class="mb-4">Recent Orders</MudText>
+                    @if (!_recentOrders.Any())
+                    {
+                        <MudAlert Severity="Severity.Info">No recent orders to display.</MudAlert>
+                    }
+                    else
+                    {
+                        <MudTable Items="@_recentOrders" Hover="true" Breakpoint="Breakpoint.Sm" Class="mb-4">
+                            <HeaderContent>
+                                <MudTh>ORDER ID</MudTh>
+                                <MudTh>CUSTOMER</MudTh>
+                                <MudTh>AMOUNT</MudTh>
+                                <MudTh>STATUS</MudTh>
+                                <MudTh>DATE</MudTh>
+                                <MudTh>DELIVERY METHOD</MudTh>
+                            </HeaderContent>
+                            <RowTemplate Context="item">
+                                <MudTd DataLabel="Order ID">@item.Id.ToString().Substring(0, 8)</MudTd> @* Shortened ID for display *@
+                                <MudTd DataLabel="Customer">@item.CustomerAddress?.FullName</MudTd>
+                                <MudTd DataLabel="Amount">@item.TotalAmount.ToString("C2")</MudTd>
+                                <MudTd DataLabel="Status">
+                                    <MudChip T="string" Color="@GetStatusColor(item.Status)">@item.Status</MudChip>
+                                </MudTd>
+                                <MudTd DataLabel="Order Date">@item.OrderDate.ToString("dd MMM yyyy HH:mm")</MudTd>
+                                <MudTd DataLabel="Delivery Method">@item.DeliveryDetails?.DeliveryMethod</MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                </MudPaper>
+            }
+        </MudContainer>
     </Authorized>
     <NotAuthorized>
         <div class="login-background">
@@ -305,7 +312,7 @@ Data = _revenueData.Select(rd => (double)rd.Revenue).ToArray()
         _revenueChartOptions = new ChartOptions
         {
             InterpolationOption = InterpolationOption.NaturalSpline,
-            YAxisFormat = "c", 
+            YAxisFormat = "c",
             YAxisTicks = 5,
             XAxisLines = true,
             YAxisLines = true,

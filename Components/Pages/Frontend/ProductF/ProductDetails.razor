@@ -126,8 +126,8 @@
                     <MudItem xs="12" sm="6" md="4">
                         <MudCard Outlined="true" Class="d-flex flex-column h-100">
                             <MudCardMedia Image="@product.ImageUrl" Height="150" Style="object-fit: cover;" />
-                            <MudCardContent Class="flex-grow-1">
-                                <MudText Typo="Typo.subtitle1" Class="mb-1">@product.Name</MudText>
+                            <MudCardContent Class="flex-grow-1 mt-2">
+                                <MudText Typo="Typo.subtitle1" Class="mb-1 mt-4">@product.Name</MudText>
                                 <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-2">KSh @product.Price.ToString("N2")</MudText>
                                 @if (product.StockQuantity > 0)
                                 {

@@ -6,6 +6,7 @@
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
 @using TestP.Data
+@using TestP.Components.Account.Pages.Shared
 
 @inject UserManager<ApplicationUser> UserManager
 @inject IUserStore<ApplicationUser> UserStore
@@ -27,6 +28,7 @@
         <MudText Typo="Typo.h3" GutterBottom="true">Register</MudText>
         <StatusMessage Message="@Message" />
         <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
+            <AntiforgeryToken />
             <DataAnnotationsValidator />
 
             <MudText Typo="Typo.body1" GutterBottom="true">Create a new account.</MudText>
@@ -55,9 +57,10 @@
             </MudGrid>
             <MudItem md="12" Class="align-center justify-center">
                     <MudDivider Class="my-4" />
-                    <MudText Typo="Typo.body2" Color="Color.Secondary" GutterBottom =" true"
-                        Style="text-align: center; padding-top:6px;">Use another service to register.</MudText>
-                <ExternalLoginPicker />
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" GutterBottom =" true"Style="text-align: center; padding-top:6px;">Use another service to register.</MudText>
+                    <div class="d-flex flex-column ml-8 align-center justify-center">
+                        <ExternalLoginPicker/>
+                    </div>
             </MudItem>
                 <div class="d-flex flex-column align-center">
                     <MudDivider Class="my-4" />
